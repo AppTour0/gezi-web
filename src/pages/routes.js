@@ -1,35 +1,57 @@
 import React from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
-import history from "../history";
 import StoreProvider from "../components/Store/Provider";
+import UserStoreProvider from "../components/Store/Data/UserProvider";
 import RoutesPrivate from "../components/Routes/Private/Private";
 import Home from "./Home/Home";
 import Login from "./Login/Login";
 import Services from "./Services/Services";
+import Header from "./Header";
+import Footer from "./Footer";
+import AddEditService from "./Services/Add_Edit";
 
 import { ApolloProvider } from "react-apollo";
 import { ApolloProvider as ApolloHooksProvider } from "@apollo/react-hooks";
 import { client } from "../api";
 
 const PagesRoute = () => (
-  <Router>
-    <ApolloProvider client={client}>
-      <ApolloHooksProvider client={client}>
-        <StoreProvider>
-          <Switch>
-            <Route path="/login" component={Login} />
-            <RoutesPrivate exact path="/" component={Home} />
-            <RoutesPrivate exact path="/services" component={() => <Services idEnt={5} />} />
-          </Switch>
-        </StoreProvider>
-      </ApolloHooksProvider>
-    </ApolloProvider>
-  </Router>
+  <div class="row">
+    <div class="container-fluid">
+      <Header></Header>
+      <br />
+      <Router>
+        <ApolloProvider client={client}>
+          <ApolloHooksProvider client={client}>
+            <UserStoreProvider>
+              <StoreProvider>
+                <Switch>
+                  <Route path="/login" component={Login} />
+                  <RoutesPrivate exact path="/" component={Home} />
+                  <RoutesPrivate exact path="/services" component={Services} />
+                  <RoutesPrivate
+                    exact
+                    path="/services/addEdit/:type/:idService"
+                    component={AddEditService}
+                  />
+                </Switch>
+              </StoreProvider>
+            </UserStoreProvider>
+          </ApolloHooksProvider>
+        </ApolloProvider>
+      </Router>
+      <Footer></Footer>
+    </div>
+  </div>
 );
 
 export default PagesRoute;
 
-/* import React, { useContext } from 'react';
+/* 
+<RoutesPrivate exact path="/services/addEdit/:idServ" component={() => <AddEditService id={5} />} />
+
+
+
+import React, { useContext } from 'react';
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom';
 
 import { Context } from './Context/AuthContext';

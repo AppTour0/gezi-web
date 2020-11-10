@@ -1,10 +1,15 @@
-import React from "react";
+import React, {useContext} from "react";
 //import { Alert } from 'reactstrap';
 import { getServices } from "./Queries";
 import { useQuery } from "@apollo/client";
+import UserContext from "../../components/Store/Data/UserContext";
+import { useHistory } from "react-router-dom";
 
-const Services = (props) => {
-  var idEnt = props.idEnt;
+const Services = () => {
+  const history = useHistory();
+  const { idUser } = useContext(UserContext);
+  var idEnt = idUser;
+
   const { loading, error, data } = useQuery(getServices, {
     variables: { idEnt },
   });
@@ -12,9 +17,13 @@ const Services = (props) => {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error :( {error}</p>;
 
+  function addOrEditService(type, idService){
+    return history.push("services/addEdit/"+type+"/"+idService);
+  }
+
   return (
     <div class="container">
-      <a name="" id="" class="btn btn-primary" role="button">
+      <a name="" id="" class="btn btn-primary" role="button" onClick={() => addOrEditService("insert",0)}>
         Novo
       </a>
       <br />
@@ -29,10 +38,10 @@ const Services = (props) => {
           </tr>
         </thead>
         <tbody>
-          {data.services.map(({ id, name }) => (
-            <tr key="id">
-              <td scope="row">{id}</td>
-              <td>{name}</td>
+          {data.services.map(service => (
+            <tr key={service.id}>
+              <td scope="row">{service.id}</td>
+              <td>{service.name}</td>
               <td>
                 <a
                   name=""
@@ -40,6 +49,7 @@ const Services = (props) => {
                   class="btn btn-primary"
                   href="javascript:void(0)"
                   role="button"
+                  onClick={() => addOrEditService("update",service.id)}
                 >
                   Alterar
                 </a>
@@ -60,6 +70,7 @@ const Services = (props) => {
         </tbody>
       </table>
     </div>
+    
   );
 };
 

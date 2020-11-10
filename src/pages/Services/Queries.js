@@ -48,6 +48,54 @@ export const getServices = gql`
   }
 `;
 
+export const getService = gql` 
+  query getServices($idService: Int!){
+    services (where: {
+      _and: [
+              {id: {_eq: $idService}}
+            ] 
+      }, order_by: {id: asc}) 
+      {
+      active
+      amount_tour
+      date_creation
+      description
+      final_date
+      id_enterprise
+      id
+      init_date
+      name
+      responsible
+      type_tour
+      user_creation
+      value
+      pickup_customer
+      place
+      empresa {
+        cidade
+      }
+      services_images{
+        id
+        service_id
+        image_url
+        default
+      }
+      mon
+      tue
+      wed
+      thu
+      fri
+      sat
+      sun
+      feedbacks{
+        general
+        comment
+      }
+      city
+    }
+  }
+`;
+
 export const ADD_SERVICE = gql`
 mutation createService($objects: [services_insert_input!]!) {
   insert_services(objects: $objects) {
@@ -78,4 +126,15 @@ mutation deleteService($id: Int!) {
     affected_rows
   }
 }
+`;
+
+export const getTypeTours = gql`
+  query getTypeTours{
+    type_tours(order_by: {id: asc}) {
+      description
+      id
+      image
+      type
+    }
+  }
 `;

@@ -1,15 +1,17 @@
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import StoreContext from "../../components/Store/Context";
+import UserContext from "../../components/Store/Data/UserContext";
 import { useHistory } from "react-router-dom";
 import "./Home.css";
-import { Link } from "react-router-dom";
 
 const PagesHome = () => {
   const { setToken } = useContext(StoreContext);
+  const { setIdUser } = useContext(UserContext);
   const history = useHistory();
 
   function Logout() {
     setToken(null);
+    setIdUser(null);
     return history.push("/");
   }
 
