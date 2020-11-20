@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import StoreProvider from "../components/Store/Provider";
 import UserStoreProvider from "../components/Store/Data/UserProvider";
+import EntStoreProvider from "../components/Store/Data/EntProvider";
 import RoutesPrivate from "../components/Routes/Private/Private";
 import Home from "./Home/Home";
 import Login from "./Login/Login";
@@ -9,38 +10,55 @@ import Services from "./Services/Services";
 import Header from "./Header";
 import Footer from "./Footer";
 import AddEditService from "./Services/Add_Edit";
+import "./routes.css";
 
 import { ApolloProvider } from "react-apollo";
 import { ApolloProvider as ApolloHooksProvider } from "@apollo/react-hooks";
 import { client } from "../api";
 
+import { library } from "@fortawesome/fontawesome-svg-core";
+import { fab } from "@fortawesome/free-brands-svg-icons";
+import {
+  faCheckSquare,
+  faEdit,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
+
+library.add(fab, faCheckSquare, faEdit, faTrash);
+
 const PagesRoute = () => (
-  <div class="row">
-    <div class="container-fluid">
-      <Header></Header>
-      <br />
+  <div className="container-fluid">
+    <Header></Header>
+    <br />
+    <div className="container">
       <Router>
         <ApolloProvider client={client}>
           <ApolloHooksProvider client={client}>
-            <UserStoreProvider>
-              <StoreProvider>
-                <Switch>
-                  <Route path="/login" component={Login} />
-                  <RoutesPrivate exact path="/" component={Home} />
-                  <RoutesPrivate exact path="/services" component={Services} />
-                  <RoutesPrivate
-                    exact
-                    path="/services/addEdit/:type/:idService"
-                    component={AddEditService}
-                  />
-                </Switch>
-              </StoreProvider>
-            </UserStoreProvider>
+            <EntStoreProvider>
+              <UserStoreProvider>
+                <StoreProvider>
+                  <Switch>
+                    <Route path="/login" component={Login} />
+                    <RoutesPrivate exact path="/" component={Home} />
+                    <RoutesPrivate
+                      exact
+                      path="/services"
+                      component={Services}
+                    />
+                    <RoutesPrivate
+                      exact
+                      path="/services/addEdit/:type/:idService"
+                      component={AddEditService}
+                    />
+                  </Switch>
+                </StoreProvider>
+              </UserStoreProvider>
+            </EntStoreProvider>
           </ApolloHooksProvider>
         </ApolloProvider>
       </Router>
-      <Footer></Footer>
     </div>
+    <Footer></Footer>
   </div>
 );
 

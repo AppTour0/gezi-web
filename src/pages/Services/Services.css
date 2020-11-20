@@ -1,0 +1,21 @@
+.status-red{
+    color: red;
+}
+
+.status-black{
+    color: black;
+}
+
+.desable-btn{
+    pointer-events: none;
+    cursor: default;
+    color: grey;
+}
+
+.enable-btn{
+    color:red;
+}
+
+.center-btn{
+    margin: 15px;
+}

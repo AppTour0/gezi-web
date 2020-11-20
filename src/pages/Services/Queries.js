@@ -44,6 +44,9 @@ export const getServices = gql`
         comment
       }
       city
+      orders{
+        id
+      }
     }
   }
 `;
@@ -92,11 +95,14 @@ export const getService = gql`
         comment
       }
       city
+      orders{
+        id
+      }
     }
   }
 `;
 
-export const ADD_SERVICE = gql`
+export const addService = gql`
 mutation createService($objects: [services_insert_input!]!) {
   insert_services(objects: $objects) {
     returning {
@@ -106,7 +112,7 @@ mutation createService($objects: [services_insert_input!]!) {
 }
 `;
 
-export const UPDATE_SERVICE = gql`
+export const updateService = gql`
 mutation update_services($id: Int!, $changes: services_set_input) {
   update_services(
     where: {id: {_eq: $id}},
@@ -120,7 +126,7 @@ mutation update_services($id: Int!, $changes: services_set_input) {
 }
 `;
 
-export const DEL_SERVICE = gql`
+export const deleteService = gql`
 mutation deleteService($id: Int!) {
   delete_services(where: {id: {_eq: $id}}) {
     affected_rows
@@ -135,6 +141,47 @@ export const getTypeTours = gql`
       id
       image
       type
+    }
+  }
+`;
+
+export const addServiceItems = gql`
+  mutation createServiceItems($objects: [services_items_insert_input!]!) {
+    insert_services_items(objects: $objects) {
+      returning {
+        id
+      }
+    }
+  }
+`;
+
+export const updateServiceItems = gql`
+  mutation updateServiceItems($id: Int, $date: timestamptz, $changes: services_items_set_input) {
+    update_services_items(
+      where: {service_id: {_eq: $id}, 
+      _and: {date: {_eq: $date}}}, 
+      _set: $changes) {
+      returning {
+        id
+      }
+    }
+  }
+`;
+
+export const addServiceImages = gql`
+  mutation createServiceImages($objects: [services_images_insert_input!]!) {
+    insert_services_images(objects: $objects) {
+      returning {
+        id
+      }
+    }
+  }
+`;
+
+export const deleteServiceImages = gql`
+  mutation deleteServiceImages {
+    delete_services_images(where: {id: {_eq: $id}}) {
+      affected_rows
     }
   }
 `;

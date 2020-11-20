@@ -1,0 +1,8 @@
+html, body, #root, .row, .container-fluid{
+    height: 100%
+
+  }
+.container-fluid > .container{
+    min-height: 100%;
+    position:relative;
+}
