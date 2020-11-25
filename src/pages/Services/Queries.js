@@ -185,3 +185,14 @@ export const deleteServiceImages = gql`
     }
   }
 `;
+
+export const deleteServiceItems = gql`
+  mutation deleteServiceItems {
+    delete_services_items(where: {
+      date: {_in: $dates}, 
+      _and: {service_id: {_eq: $idService}}
+    }) {
+      affected_rows
+    }
+  }
+`;

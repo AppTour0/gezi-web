@@ -22,41 +22,44 @@ import {
   faCheckSquare,
   faEdit,
   faTrash,
+  faCamera,
+  faArrowLeft
 } from "@fortawesome/free-solid-svg-icons";
 
-library.add(fab, faCheckSquare, faEdit, faTrash);
+library.add(fab, faCheckSquare, faEdit, faTrash, faCamera, faArrowLeft);
 
 const PagesRoute = () => (
-  <div className="container-fluid">
+  <div>
     <Header></Header>
-    <br />
-    <div className="container">
-      <Router>
-        <ApolloProvider client={client}>
-          <ApolloHooksProvider client={client}>
-            <EntStoreProvider>
-              <UserStoreProvider>
-                <StoreProvider>
-                  <Switch>
-                    <Route path="/login" component={Login} />
-                    <RoutesPrivate exact path="/" component={Home} />
-                    <RoutesPrivate
-                      exact
-                      path="/services"
-                      component={Services}
-                    />
-                    <RoutesPrivate
-                      exact
-                      path="/services/addEdit/:type/:idService"
-                      component={AddEditService}
-                    />
-                  </Switch>
-                </StoreProvider>
-              </UserStoreProvider>
-            </EntStoreProvider>
-          </ApolloHooksProvider>
-        </ApolloProvider>
-      </Router>
+    <div className="container-fluid">
+      <div className="container">
+        <Router>
+          <ApolloProvider client={client}>
+            <ApolloHooksProvider client={client}>
+              <EntStoreProvider>
+                <UserStoreProvider>
+                  <StoreProvider>
+                    <Switch>
+                      <Route path="/login" component={Login} />
+                      <RoutesPrivate exact path="/" component={Home} />
+                      <RoutesPrivate
+                        exact
+                        path="/services"
+                        component={Services}
+                      />
+                      <RoutesPrivate
+                        exact
+                        path="/services/addEdit/:type/:idService"
+                        component={AddEditService}
+                      />
+                    </Switch>
+                  </StoreProvider>
+                </UserStoreProvider>
+              </EntStoreProvider>
+            </ApolloHooksProvider>
+          </ApolloProvider>
+        </Router>
+      </div>
     </div>
     <Footer></Footer>
   </div>

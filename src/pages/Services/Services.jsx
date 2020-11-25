@@ -15,15 +15,16 @@ const Services = () => {
   const history = useHistory();
   const { idEnt } = useContext(EntContext);
 
-  //const [loading2, setLoading] = useState(false);
+  const [loadingPage, setLoading] = useState(false);
   const [delService] = useMutation(deleteService);
-  const [error2, setError] = useState(null);
+  const [errorPage, setError] = useState(null);
 
   const { loading, error, data } = useQuery(getServices, {
     variables: { idEnt },
   });
+/* setLoading(loading);
+console.log("loading da pagina " + loadingPage); */
 
-  //setLoading(loading);
   //setError(error);
 
   /* if (loadingService) return <p>Loading...</p>;
@@ -67,7 +68,21 @@ const Services = () => {
       buttons: [
         {
           label: 'Sim',
-          onClick: (() => alert('Click Yes'))
+          onClick: (async () => {
+            setLoading(true);
+            try {
+              const { data, loading, error } = await delService({
+                variables: { id },
+                refetchQueries: [{ query: getServices, variables: { idEnt } }],
+              });        
+              setLoading(loading);
+              setError(error);
+              if (error) return setError(error);
+            } catch (error) {
+              setLoading(false);
+              setError(error.message);
+            } 
+          })
         },
         {
           label: 'Não',
@@ -75,20 +90,6 @@ const Services = () => {
         }
       ]
     });
-    //setLoading(true);
-    /* try {
-      const { data, loading, error } = await delService({
-        variables: { id },
-        refetchQueries: [{ query: getServices, variables: { idEnt } }],
-      });
-
-      //setLoading(loading);
-      setError(error);
-      if (error) return setError(error);
-    } catch (error) {
-      //setLoading(false);
-      setError(error.message);
-    } */
   }
 
   let orderLen = 0;
@@ -96,17 +97,17 @@ const Services = () => {
 
   return (
     <div>
-      {error2 && <div class="alert alert-danger" role="alert">
+      {errorPage && <div className="alert alert-danger" role="alert">
         <strong>{error}</strong>
       </div>}
 
       {loading && <ReactLoading type={"spin"} color={"#0F4C81"} height={'10%'} width={'10%'} className="loading"/>}
-      {!loading && 
+      {!loading &&
         <div>
           <a
             name=""
             id=""
-            class="btn btn-primary"
+            className="btn btn-primary"
             role="button"
             onClick={() => addOrEditService("insert", 0)}
           >
@@ -114,7 +115,7 @@ const Services = () => {
           </a>
           <br />
           <br />
-          <table class="table">
+          <table className="table">
             <thead>
               <tr>
                 <th>Id</th>
@@ -128,7 +129,7 @@ const Services = () => {
               {data.services.map(
                 (service) => (
                   (orderLen = service.orders.length),
-                  orderLen > 0
+                  orderLen == 0
                     ? (deleteActive = "enable-btn")
                     : (deleteActive = "desable-btn"),
                   (

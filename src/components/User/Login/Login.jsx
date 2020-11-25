@@ -4,12 +4,13 @@ import UserContext from "../../Store/Data/UserContext";
 import EntContext from "../../Store/Data/EntContext";
 import UIButton from "../../UI/Button/Button";
 import "./Login.css";
-import ReactLoading from 'react-loading';
+import ReactLoading from "react-loading";
 import "../../../pages/Loading.css";
 
 import { userByEmail } from "./Queries";
 import { useApolloClient } from "@apollo/client";
 import { useHistory } from "react-router-dom";
+import bcrypt from "bcryptjs";
 
 function initialState() {
   return { user: "", password: "" };
@@ -35,11 +36,14 @@ const UserLogin = () => {
 
   const client = useApolloClient();
   const email = values.user;
+  const password = values.password;
 
   async function submit(event) {
     event.preventDefault();
-    setLoading(true);
-    setError(null);
+    setLoading(true);    
+    values.user = "";
+    values.password = "";
+    const message = "Falha na autenticação!";
 
     try {
       const { data, loading, error } = await client.query({
@@ -48,38 +52,40 @@ const UserLogin = () => {
       });
 
       setLoading(loading);
-      setError(error);
+      setError(error);  
 
-      if (data.usuarios.length == 0) return setError("Informe um usuario e senha válido");
+      if (data.usuarios.length == 0){        
+        return setError("Informe um usuario ou senha válido");
+      }
 
       if (data.usuarios.length > 0) {
         if (data.usuarios[0].enterprise == null) {
           return setError("Você não tem acesso a este módulo");
         }
 
-        if (
-          data.usuarios[0].password ===
-          "3a828a0407ed80599d5fef9d71e9e8e23757b20231511da737d377a771c96c7c4044aa53a868cba99855156d1072d5c068b2174fe6a98a35a120a5866038a106"
-        ) {
+        const hash = bcrypt.compareSync(password, data.usuarios[0].password);
+        if (hash) {
           setToken("1234");
           setIdUser(data.usuarios[0].id);
           setIdEnt(data.usuarios[0].enterprise.id);
           return history.push("/");
         } else {
-          setError("Usuario ou senha inválido!");
+          setError(message);
         }
       } else {
-        setError("Usuario ou senha inválido!");
+        setError(message);
       }
     } catch (e) {
       setError("Algo deu errado: " + e);
     }
+    
+    
   }
 
   return (
     <div>
       {error && (
-        <div class="alert alert-danger" role="alert">
+        <div className="alert alert-danger" role="alert">
           <strong>{error}</strong>
         </div>
       )}

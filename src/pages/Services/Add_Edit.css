@@ -8,3 +8,13 @@
 .form-text{
     margin-bottom: 10px;
 }
+.image{
+    width: 10%;
+    margin-right: 5px;
+    margin-bottom: 10px;
+}
+
+#upload-file{
+    display: none;
+}
+

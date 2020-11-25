@@ -9,7 +9,7 @@ import {
   addServiceItems,
   addServiceImages,
   updateService,
-  deleteService,
+  deleteServiceItems,
 } from "./Queries";
 import { useApolloClient, useMutation } from "@apollo/client";
 import { serviceModel } from "./Model";
@@ -19,6 +19,8 @@ import "./Add_Edit.css";
 import ReactLoading from "react-loading";
 import "../Loading.css";
 import storage from "../../utils/firebase/index";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { withRouter } from "react-router";
 
 const AddEditService = (props) => {
   var typePost = props.computedMatch.params.type;
@@ -34,27 +36,30 @@ const AddEditService = (props) => {
   const [setServiceItems, { itemsInsert }] = useMutation(addServiceItems);
   const [setServiceImages, { imagesInsert }] = useMutation(addServiceImages);
   const [setUpdateService, { serviceUpdate }] = useMutation(updateService);
-  const [setDeleteService, { serviceDelete }] = useMutation(deleteService);
-  const [image, setImage] = useState(null);
+  const [setDeleteServiceItems, { serviceDelete }] = useMutation(
+    deleteServiceItems
+  );
+  const [imagesArray, setImagesArray] = useState([]);
+  const [imagesDisplay, setImagesDisplay] = useState([]);
   const [url, setUrl] = useState("");
 
   const descriptionRef = useRef();
   const valueRef = useRef();
+  const placeRef = useRef();
 
   const { idUser } = useContext(UserContext);
   const { idEnt } = useContext(EntContext);
   let now = new Date();
   let haveImages = false;
-  let imagePicker = [];
   // testa se houve alteração do dia do passeio
   const days = {
-    "sun": false,
-    "mon": false,
-    "tue": false,
-    "wed": false,
-    "thu": false,
-    "fri": false,
-    "sat": false
+    sun: false,
+    mon: false,
+    tue: false,
+    wed: false,
+    thu: false,
+    fri: false,
+    sat: false,
   };
 
   const currencyConfig = {
@@ -95,18 +100,26 @@ const AddEditService = (props) => {
       if (!loadingService) {
         setValues(data.services[0]);
         setLoading(loadingService);
-        haveImages = data.services[0].images.length;
-        days['sun'] = data.services[0].sun;
-        days['mon'] = data.services[0].mon;
-        days['tue'] = data.services[0].tue;
-        days['wed'] = data.services[0].wed;
-        days['thu'] = data.services[0].thu;
-        days['fri'] = data.services[0].fri;
-        days['sat'] = data.services[0].sat;
+        haveImages = data.services[0].services_images.length;
+        days["sun"] = data.services[0].sun;
+        days["mon"] = data.services[0].mon;
+        days["tue"] = data.services[0].tue;
+        days["wed"] = data.services[0].wed;
+        days["thu"] = data.services[0].thu;
+        days["fri"] = data.services[0].fri;
+        days["sat"] = data.services[0].sat;
+        if (haveImages > 0) {
+          setImagesArray(imagesArray.concat(data.services[0].services_images));
+          setImagesDisplay(
+            imagesDisplay.concat(
+              URL.createObjectURL(data.services[0].services_images)
+            )
+          );
+        }
         return serviceModel;
       }
     } catch (error) {
-      setError(error);
+      setError(error.message);
     }
   };
 
@@ -131,12 +144,14 @@ const AddEditService = (props) => {
 
   function onChangeImage(event) {
     if (event.target.files[0]) {
-      setImage(event.target.files[0]);
-      imagePicker.push(event.target.files[0]);
+      setImagesArray(imagesArray.concat(event.target.files[0]));
+      setImagesDisplay(
+        imagesDisplay.concat(URL.createObjectURL(event.target.files[0]))
+      );
     }
   }
 
-  async function saveImage(id) {
+  async function saveImage(idService) {
     let images = [];
     let imgDefault = true;
 
@@ -144,30 +159,31 @@ const AddEditService = (props) => {
       imgDefault = false;
     }
 
-    for (var i = 0; i < imagePicker.length; i++) {
-      let item = imagePicker[i];
-      let fileName = Math.floor(Math.random() * 10000) + ".jpg";
-      let ref = storage
-        .ref()
-        .child("ent_" + idEnt)
-        .child("serv_" + idService)
-        .child(fileName);
-      let uploadTask = ref.putFile(item);
+    try {
+      for await (let item of imagesArray) {
+        let fileName = Math.floor(Math.random() * 10000) + ".jpg";
 
-      let taskSnapshot = await uploadTask.onComplete;
-      let downloadUrl = await taskSnapshot.ref.getDownloadURL();
-      /* este campo é utilizado posteriormente para exclusão do aquivo no firebase */
-      let path = await taskSnapshot.ref.getPath();
-      /* String getstorage = await taskSnapshot.ref.getStorage();
-      String root = await taskSnapshot.ref.getRoot(); */
+        let ref = storage
+          .ref()
+          .child("ent_" + idEnt)
+          .child("serv_" + idService)
+          .child(fileName);
 
-      images.push({
-        service_id: id,
-        image_url: downloadUrl,
-        default: imgDefault,
-        file_path: path,
-      });
-      imgDefault = false;
+        let uploadTask = await ref.put(item);
+
+        let downloadUrl = await uploadTask.ref.getDownloadURL();
+        let path = ref.fullPath;
+
+        images.push({
+          service_id: idService,
+          image_url: downloadUrl,
+          default: imgDefault,
+          file_path: path,
+        });
+        imgDefault = false;
+      }
+    } catch (error) {
+      setError(error.message);
     }
 
     return images;
@@ -186,6 +202,14 @@ const AddEditService = (props) => {
     if (!values.value || values.value <= 0) {
       errors["value"] = "Não pode ser zero!";
       //valueRef.current.focus();
+    }
+
+    if (!values.pickup_customer && values.place == "") {
+      errors["place"] = "Não pode ser vazio!";
+      placeRef.current.focus();
+    } else if (!values.pickup_customer && values.place.length < 3) {
+      errors["place"] = "Deve ter mais que 3 caracteres!";
+      placeRef.current.focus();
     }
 
     if (values.value) {
@@ -228,31 +252,39 @@ const AddEditService = (props) => {
           fri: values.fri,
           sat: values.sat,
           sun: values.sun,
-          city: "",
+          city: "Passeios",
         };
-        setLoading(false);
+
         try {
           await setService({
             variables: { objects: objects },
             refetchQueries: [{ query: getServices, variables: { idEnt } }],
           }).then(async (data) => {
-            console.log(data.id);
-            let items = createObjectItems();
+            let idNewService = data.data.insert_services.returning[0].id;
+            let items = createObjectItems(180, idNewService);
             await setServiceItems({
-              variables: { objects: objects },
+              variables: { objects: items },
               refetchQueries: [{ query: getServices, variables: { idEnt } }],
             });
+            let images = await saveImage(idNewService);
+            if (images.length == 0) {
+              setLoading(false);
+              return history.push("/services");
+            }
+            await setServiceImages({
+              variables: { objects: images },
+              refetchQueries: [{ query: getServices, variables: { idEnt } }],
+            }).then((value) => {
+              setLoading(false);
+              return history.push("/services");
+            });
           });
-          //const { data, loadingSubmit, error } =
-          //setLoading(loadingSubmit);
-          if (error) return setError(error);
-          return history.push("/services");
         } catch (error) {
           setLoading(false);
           setError(error.message);
         }
       } else {
-        /* se for update */
+        // se for update
         try {
           let changesService = {
             name: values.name,
@@ -276,17 +308,15 @@ const AddEditService = (props) => {
           if (images.length > 0) {
             await setServiceImages({
               variables: { objects: images },
-            }).then(async (value) => {
-              await changeWeekDay().then(async (value) => {
-                await setUpdateService({
-                  variables: { id: idService, objects: changesService },
-                  refetchQueries: [
-                    { query: getServices, variables: { idEnt } },
-                  ],
-                });
-              });
             });
           }
+
+          await changeWeekDay().then(async (value) => {
+            await setUpdateService({
+              variables: { id: idService, objects: changesService },
+              refetchQueries: [{ query: getServices, variables: { idEnt } }],
+            });
+          });
         } catch (error) {
           return setError(error.message);
         }
@@ -337,12 +367,19 @@ const AddEditService = (props) => {
   /* se for insert cria os dias se for update altera somente */
   async function createOrDeleteDays(weekDay, typePost) {
     let today = now.getFullYear() + "-" + now.getMonth() + "-" + now.getDate();
-    const diffTime = Math.abs(today - values.final_date);
+    console.log(values.final_date);
+    const diffTime = Math.abs(
+      Date.parse(today) - Date.parse(values.final_date)
+    );
+    console.log(diffTime);
     let index = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     let dates = [];
 
     for (var i = 0; i < index; i++) {
-      if (Date.parse(today).weekday == weekDay) {
+      console.log(Date.parse(today));
+      let todayWeekday = Date.parse(today).getDay();
+      console.log(todayWeekday);
+      if (Date.parse(today).getDay() == weekDay) {
         dates.push(today);
       }
       today =
@@ -350,11 +387,9 @@ const AddEditService = (props) => {
     }
 
     if (typePost == "delete") {
-      await setDeleteService({
-        variables: { id: idService },
-        refetchQueries: [
-          { query: getServices, variables: { idEnt } },
-        ],
+      await setDeleteServiceItems({
+        variables: { dates: dates, idService: idService },
+        refetchQueries: [{ query: getServices, variables: { idEnt } }],
       });
     } else {
       let objectItems = [];
@@ -368,15 +403,13 @@ const AddEditService = (props) => {
       }
       await setServiceItems({
         variables: { id: idService, objects: objectItems },
-        refetchQueries: [
-          { query: getServices, variables: { idEnt } },
-        ],
+        refetchQueries: [{ query: getServices, variables: { idEnt } }],
       });
     }
   }
 
   /* cria as datas de acordo com os dias da semana*/
-  function createObjectItems(length) {
+  function createObjectItems(length, idService) {
     let initDateAdded = new Date();
     let weekDay = initDateAdded.getDay;
     let initDateMore =
@@ -436,15 +469,16 @@ const AddEditService = (props) => {
         objectItems.push(date);
       }
     }
-    return createObjectItems;
+    return objectItems;
   }
 
   let insert = typePost === "insert";
+  let imgDefault = "/img_default.png";
 
   return (
     <div>
       {error && (
-        <div class="alert alert-danger" role="alert">
+        <div className="alert alert-danger" role="alert">
           <strong>{error}</strong>
         </div>
       )}
@@ -460,6 +494,18 @@ const AddEditService = (props) => {
 
       {!loading && (
         <div>
+          <a
+            name=""
+            id="btn-voltar"
+            className="btn btn-link"
+            href="javascript:void(0)"
+            role="button"
+            onClick={() => history.push("/services")}
+          >
+            <FontAwesomeIcon icon="arrow-left"/> Voltar
+          </a>
+          <br></br>
+          <br></br>
           {insert && <h2>Novo Passeio</h2>}
           {!insert && <h2>Alterar Passeio</h2>}
           <form
@@ -468,39 +514,64 @@ const AddEditService = (props) => {
               handleSubmit();
             }}
           >
-            <a
-              name=""
-              id=""
-              class="btn btn-primary"
-              onClick={() => createObjectItems(20)}
-              role="button"
-            >
-              Teste
-            </a>
-            <div class="form-group">
-              <label for="name">Nome do Passeio</label>
+            <hr></hr>
+            <div className="container">
+              <div className="row">
+                {imagesArray.length === 0 && (
+                  <img
+                    src={imgDefault}
+                    alt="..."
+                    className="image img-thumbnail"
+                  />
+                )}
+                {imagesDisplay.length > 0 &&
+                  imagesDisplay.map((image) => (
+                    <img
+                      src={image}
+                      alt="..."
+                      className="image img-thumbnail"
+                    />
+                  ))}
+              </div>
+            </div>
+            <div className="container">
+              <div className="row">
+                <label htmlFor="upload-file" className="btn btn-warning">
+                  <FontAwesomeIcon icon="camera" />
+                </label>
+                <input
+                  type="file"
+                  name="image"
+                  id="upload-file"
+                  onChange={onChangeImage}
+                />
+              </div>
+            </div>
+            <br></br>
+            <div className="form-group">
+              <label htmlFor="name">Nome do Passeio</label>
               <input
                 id="name"
                 type="text"
                 name="name"
                 onChange={onChange}
                 value={values.name}
-                class="form-control"
+                className="form-control"
                 placeholder="Digite o nome do passeio"
                 required
                 minLength="3"
               />
             </div>
 
-            <div class="form-group">
-              <label for="description">Descrição do Passeio</label>
+            <div className="form-group">
+              <label htmlFor="description">Descrição do Passeio</label>
               <textarea
                 id="description"
                 type="text"
                 name="description"
                 onChange={onChange}
                 value={values.description}
-                class="form-control"
+                className="form-control"
                 placeholder="Digite uma descrição"
                 rows="5"
                 required
@@ -508,14 +579,14 @@ const AddEditService = (props) => {
                 ref={descriptionRef}
               ></textarea>
               {formErrors.description && (
-                <small class="form-text text-danger">
+                <small className="form-text text-danger">
                   {formErrors.description}
                 </small>
               )}
             </div>
 
-            <div class="form-group">
-              <label for="value">Valor Unitário</label>
+            <div className="form-group">
+              <label htmlFor="value">Valor Unitário</label>
               <IntlCurrencyInput
                 currency="BRL"
                 config={currencyConfig}
@@ -524,20 +595,22 @@ const AddEditService = (props) => {
                 name="value"
                 onChange={onChange}
                 value={values.value}
-                class="form-control"
+                className="form-control"
                 placeholder="Valor Unitário"
                 required
                 ref={valueRef}
               />
               {formErrors.value && (
-                <small class="form-text text-danger">{formErrors.value}</small>
+                <small className="form-text text-danger">
+                  {formErrors.value}
+                </small>
               )}
             </div>
 
-            <div class="form-group">
-              <label for="type_tour">Tipo do Veículo</label>
+            <div className="form-group">
+              <label htmlFor="type_tour">Tipo do Veículo</label>
               <select
-                class="form-control"
+                className="form-control"
                 id="type_tour"
                 name="type_tour"
                 onChange={onChange}
@@ -552,147 +625,151 @@ const AddEditService = (props) => {
               </select>
             </div>
 
-            <div class="form-group">
-              <label for="place">Descreva o Local de Partida</label>
+            <div className="form-group">
+              <label htmlFor="place">Descreva o Local de Partida</label>
               <input
                 id="place"
                 type="text"
                 name="place"
                 onChange={onChange}
                 value={values.place}
-                class="form-control"
+                className="form-control"
                 placeholder="Local de Partida"
-                required
-                minLength="3"
+                ref={placeRef}
               />
+              {formErrors.place && (
+                <small className="form-text text-danger">
+                  {formErrors.place}
+                </small>
+              )}
             </div>
             <hr></hr>
             <h4>Selecione os dias da semana que o passeio estará diponível</h4>
-            <div class="container days">
-              <div class="row">
-                <div class="form-check">
+            <div className="container days">
+              <div className="row">
+                <div className="form-check">
                   <input
                     type="checkbox"
-                    class="form-check-input"
+                    className="form-check-input"
                     id="mon"
                     onChange={onChangeCheck}
                     value={values.mon}
                     checked={values.mon}
                   />
-                  <label class="form-check-label" for="mon">
+                  <label className="form-check-label" for="mon">
                     Segunda
                   </label>
                 </div>
-                <div class="form-check">
+                <div className="form-check">
                   <input
                     type="checkbox"
-                    class="form-check-input"
+                    className="form-check-input"
                     id="tue"
                     onChange={onChangeCheck}
                     value={values.tue}
                     checked={values.tue}
                   />
-                  <label class="form-check-label" for="tue">
+                  <label className="form-check-label" htmlFor="tue">
                     Terça
                   </label>
                 </div>
-                <div class="form-check">
+                <div className="form-check">
                   <input
                     type="checkbox"
-                    class="form-check-input"
+                    className="form-check-input"
                     id="wed"
                     onChange={onChangeCheck}
                     value={values.wed}
                     checked={values.wed}
                   />
-                  <label class="form-check-label" for="wed">
+                  <label className="form-check-label" htmlFor="wed">
                     Quarta
                   </label>
                 </div>
-                <div class="form-check">
+                <div className="form-check">
                   <input
                     type="checkbox"
-                    class="form-check-input"
+                    className="form-check-input"
                     id="thu"
                     onChange={onChangeCheck}
                     value={values.thu}
                     checked={values.thu}
                   />
-                  <label class="form-check-label" for="thu">
+                  <label className="form-check-label" htmlFor="thu">
                     Quinta
                   </label>
                 </div>
-                <div class="form-check">
+                <div className="form-check">
                   <input
                     type="checkbox"
-                    class="form-check-input"
+                    className="form-check-input"
                     id="fri"
                     onChange={onChangeCheck}
                     value={values.fri}
                     checked={values.fri}
                   />
-                  <label class="form-check-label" for="fri">
+                  <label className="form-check-label" htmlFor="fri">
                     Sexta
                   </label>
                 </div>
-                <div class="form-check">
+                <div className="form-check">
                   <input
                     type="checkbox"
-                    class="form-check-input"
+                    className="form-check-input"
                     id="sat"
                     onChange={onChangeCheck}
                     value={values.sat}
                     checked={values.sat}
                   />
-                  <label class="form-check-label" for="sat">
+                  <label className="form-check-label" htmlFor="sat">
                     Sabado
                   </label>
                 </div>
-                <div class="form-check">
+                <div className="form-check">
                   <input
                     type="checkbox"
-                    class="form-check-input"
+                    className="form-check-input"
                     id="sun"
                     onChange={onChangeCheck}
                     value={values.sun}
                     checked={values.sun}
                   />
-                  <label class="form-check-label" for="sun">
+                  <label className="form-check-label" htmlFor="sun">
                     Domingo
                   </label>
                 </div>
               </div>
             </div>
             <hr></hr>
-            <div class="form-check">
+            <div className="form-check">
               <input
                 type="checkbox"
-                class="form-check-input"
+                className="form-check-input"
                 id="active"
                 onChange={onChangeCheck}
                 value={values.active}
                 checked={values.active}
               />
-              <label class="form-check-label" for="active">
+              <label className="form-check-label" htmlFor="active">
                 Ativo
               </label>
             </div>
 
-            <div class="form-check">
+            <div className="form-check">
               <input
                 type="checkbox"
-                class="form-check-input"
+                className="form-check-input"
                 id="pickup_customer"
                 onChange={onChangeCheck}
                 value={values.pickup_customer}
                 checked={values.pickup_customer}
               />
-              <label class="form-check-label" for="pickup_customer">
+              <label className="form-check-label" htmlFor="pickup_customer">
                 Buscar o cliente
               </label>
             </div>
 
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" className="btn btn-primary">
               Salvar
             </button>
           </form>
@@ -702,7 +779,7 @@ const AddEditService = (props) => {
   );
 };
 
-export default AddEditService;
+export default withRouter(AddEditService);
 
 /* function handleValidation() {
     let fields = this.state.fields;
