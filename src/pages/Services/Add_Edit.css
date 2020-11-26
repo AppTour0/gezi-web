@@ -9,7 +9,7 @@
     margin-bottom: 10px;
 }
 .image{
-    width: 10%;
+    /*width: 10%;*/
     margin-right: 5px;
     margin-bottom: 10px;
 }
@@ -17,4 +17,32 @@
 #upload-file{
     display: none;
 }
+/* adiciona botão de fechar nas imagens*/
+.wrapper {
+    position: relative;
+    width: 10%;
+}
+.wrapper-galery {
+    position: relative;
+    width: 40%;
+}
+.close-button{
+    right:5px;
+    position: absolute;    
+}
+.close{
+    opacity: 6;
+    cursor: pointer;
+}
 
+.btn-upload{
+    margin-bottom: 0;
+}
+
+.img-actions{
+    margin-bottom: 10px;
+}
+
+.img-actions > label{
+    margin-right: 10px;
+}

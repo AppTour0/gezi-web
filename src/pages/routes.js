@@ -23,10 +23,11 @@ import {
   faEdit,
   faTrash,
   faCamera,
-  faArrowLeft
+  faArrowLeft,
+  faImages
 } from "@fortawesome/free-solid-svg-icons";
 
-library.add(fab, faCheckSquare, faEdit, faTrash, faCamera, faArrowLeft);
+library.add(fab, faCheckSquare, faEdit, faTrash, faCamera, faArrowLeft, faImages);
 
 const PagesRoute = () => (
   <div>

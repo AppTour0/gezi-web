@@ -10,6 +10,7 @@ import {
   addServiceImages,
   updateService,
   deleteServiceItems,
+  deleteServiceImages,
 } from "./Queries";
 import { useApolloClient, useMutation } from "@apollo/client";
 import { serviceModel } from "./Model";
@@ -20,7 +21,7 @@ import ReactLoading from "react-loading";
 import "../Loading.css";
 import storage from "../../utils/firebase/index";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { withRouter } from "react-router";
+import { confirmAlert } from 'react-confirm-alert'; 
 
 const AddEditService = (props) => {
   var typePost = props.computedMatch.params.type;
@@ -32,6 +33,7 @@ const AddEditService = (props) => {
   const client = useApolloClient();
   const [values, setValues] = useState([]);
   const [types, setTypes] = useState([]);
+  const [placeDisabled, setPlaceDisabled] = useState(false);
   const [setService, { serviceInsert }] = useMutation(addService);
   const [setServiceItems, { itemsInsert }] = useMutation(addServiceItems);
   const [setServiceImages, { imagesInsert }] = useMutation(addServiceImages);
@@ -41,7 +43,9 @@ const AddEditService = (props) => {
   );
   const [imagesArray, setImagesArray] = useState([]);
   const [imagesDisplay, setImagesDisplay] = useState([]);
-  const [url, setUrl] = useState("");
+  const [galeryArray, setGaleryArray] = useState([]);
+  const [galeryDisplay, setGaleryDisplay] = useState([]);
+  const [haveImages, setHaveImages] = useState(false);
 
   const descriptionRef = useRef();
   const valueRef = useRef();
@@ -50,7 +54,7 @@ const AddEditService = (props) => {
   const { idUser } = useContext(UserContext);
   const { idEnt } = useContext(EntContext);
   let now = new Date();
-  let haveImages = false;
+  let dbImages = [];
   // testa se houve alteração do dia do passeio
   const days = {
     sun: false,
@@ -100,7 +104,8 @@ const AddEditService = (props) => {
       if (!loadingService) {
         setValues(data.services[0]);
         setLoading(loadingService);
-        haveImages = data.services[0].services_images.length;
+        setHaveImages(data.services[0].services_images.length > 0);
+        console.log("tem imagem? - " + haveImages);
         days["sun"] = data.services[0].sun;
         days["mon"] = data.services[0].mon;
         days["tue"] = data.services[0].tue;
@@ -108,13 +113,12 @@ const AddEditService = (props) => {
         days["thu"] = data.services[0].thu;
         days["fri"] = data.services[0].fri;
         days["sat"] = data.services[0].sat;
-        if (haveImages > 0) {
-          setImagesArray(imagesArray.concat(data.services[0].services_images));
-          setImagesDisplay(
-            imagesDisplay.concat(
-              URL.createObjectURL(data.services[0].services_images)
-            )
-          );
+        if (haveImages) {
+          data.services[0].services_images.map((image) => {
+            console.log(image.image_url);
+            //setGaleryArray(imagesArray.concat(image.image_url));
+            setGaleryDisplay(galeryDisplay.concat(image.image_url));
+          });
         }
         return serviceModel;
       }
@@ -135,6 +139,7 @@ const AddEditService = (props) => {
   function onChangeCheck(event) {
     const name = event.target.id;
     const value = event.target.checked;
+    setPlaceDisabled(value);
 
     setValues({
       ...values,
@@ -472,6 +477,49 @@ const AddEditService = (props) => {
     return objectItems;
   }
 
+  function removeImageInsert(image) {
+    imagesArray.splice(imagesArray.indexOf(image), 1);
+    imagesDisplay.splice(imagesDisplay.indexOf(image), 1);
+    setImagesArray([...imagesArray]);
+    setImagesDisplay([...imagesDisplay]);
+  }
+
+  async function removeImageEdit(image){
+    confirmAlert({
+      closeOnEscape: false,
+      closeOnClickOutside: false,
+      title: 'Atenção!',
+      message: 'Tem certeza que deseja excluir esta imagem?',
+      buttons: [
+        {
+          label: 'Sim',
+          onClick: (async () => {
+            setLoading(true);
+            try {
+              const { data, loading, error } = await deleteServiceImages({
+                variables: { id: image.id },
+                refetchQueries: [{ query: getService, variables: { idService } }],
+              });
+              setLoading(loading);
+              if (error) return setError(error);
+            } catch (error) {
+              setLoading(false);
+              setError(error.message);
+            } 
+          })
+        },
+        {
+          label: 'Não',
+          onClick: () => null
+        }
+      ]
+    });
+  }
+
+  function teste() {
+    console.log(values);
+  }
+
   let insert = typePost === "insert";
   let imgDefault = "/img_default.png";
 
@@ -502,7 +550,7 @@ const AddEditService = (props) => {
             role="button"
             onClick={() => history.push("/services")}
           >
-            <FontAwesomeIcon icon="arrow-left"/> Voltar
+            <FontAwesomeIcon icon="arrow-left" /> Voltar
           </a>
           <br></br>
           <br></br>
@@ -515,38 +563,115 @@ const AddEditService = (props) => {
             }}
           >
             <hr></hr>
+
+            <div className="img-actions">
+              <label
+                htmlFor="upload-file"
+                className="btn btn-warning btn-upload"
+              >
+                <FontAwesomeIcon icon="camera" /> Adicionar
+              </label>
+              <input
+                type="file"
+                name="image"
+                id="upload-file"
+                onChange={onChangeImage}
+              />
+              {haveImages && (
+                <a
+                  name=""
+                  id=""
+                  class="btn btn-primary"
+                  href="javascript:void(0)"
+                  role="button"
+                  data-toggle="modal"
+                  data-target="#exampleModal"
+                >
+                  <FontAwesomeIcon icon="images" /> Galeria
+                </a>
+              )}
+            </div>
+
             <div className="container">
               <div className="row">
                 {imagesArray.length === 0 && (
-                  <img
-                    src={imgDefault}
-                    alt="..."
-                    className="image img-thumbnail"
-                  />
-                )}
-                {imagesDisplay.length > 0 &&
-                  imagesDisplay.map((image) => (
+                  <div className="wrapper">
                     <img
-                      src={image}
+                      src={imgDefault}
                       alt="..."
                       className="image img-thumbnail"
                     />
+                  </div>
+                )}
+                {imagesDisplay.length > 0 &&
+                  imagesDisplay.map((image) => (
+                    <div className="wrapper">
+                      <a
+                        className="close close-button"
+                        onClick={() => removeImageInsert(image)}
+                      >
+                        <span>&times;</span>
+                      </a>
+                      <img
+                        src={image}
+                        alt="..."
+                        className="image img-thumbnail"
+                      />
+                    </div>
                   ))}
               </div>
             </div>
-            <div className="container">
-              <div className="row">
-                <label htmlFor="upload-file" className="btn btn-warning">
-                  <FontAwesomeIcon icon="camera" />
-                </label>
-                <input
-                  type="file"
-                  name="image"
-                  id="upload-file"
-                  onChange={onChangeImage}
-                />
+
+            <div
+              class="modal fade"
+              id="exampleModal"
+              tabindex="-1"
+              role="dialog"
+              aria-labelledby="exampleModalLabel"
+              aria-hidden="true"
+            >
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">
+                      Galeria de Imagens
+                    </h5>
+                    <button
+                      type="button"
+                      class="close"
+                      data-dismiss="modal"
+                      aria-label="Close"
+                    >
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    {haveImages && (
+                      <div className="container">
+                        <div className="row">
+                          {values.services_images.map((image) => (
+                            <div className="wrapper-galery">
+                              <a
+                                className="close close-button"
+                                onClick={() => removeImageEdit(image)}
+                              >
+                                <span>&times;</span>
+                              </a>
+                              <img
+                                src={image.image_url}
+                                alt="..."
+                                className="image img-thumbnail"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
+
             <br></br>
             <div className="form-group">
               <label htmlFor="name">Nome do Passeio</label>
@@ -616,9 +741,18 @@ const AddEditService = (props) => {
                 onChange={onChange}
                 required
               >
-                <option value="">Selecione o tipo de veículo</option>
+                <option
+                  selected={values.type_tour === "" ? "selected" : ""}
+                  value=""
+                >
+                  Selecione o tipo de veículo
+                </option>
                 {types.map((type) => (
-                  <option key={type.id} value={type.type}>
+                  <option
+                    key={type.id}
+                    value={type.type}
+                    selected={values.type_tour == type.type ? "selected" : ""}
+                  >
                     {type.description}
                   </option>
                 ))}
@@ -636,12 +770,26 @@ const AddEditService = (props) => {
                 className="form-control"
                 placeholder="Local de Partida"
                 ref={placeRef}
+                disabled={placeDisabled ? "disabled" : ""}
               />
               {formErrors.place && (
                 <small className="form-text text-danger">
                   {formErrors.place}
                 </small>
               )}
+            </div>
+            <div className="form-check">
+              <input
+                type="checkbox"
+                className="form-check-input"
+                id="pickup_customer"
+                onChange={onChangeCheck}
+                value={values.pickup_customer}
+                checked={values.pickup_customer}
+              />
+              <label className="form-check-label" htmlFor="pickup_customer">
+                Buscar o cliente
+              </label>
             </div>
             <hr></hr>
             <h4>Selecione os dias da semana que o passeio estará diponível</h4>
@@ -656,7 +804,7 @@ const AddEditService = (props) => {
                     value={values.mon}
                     checked={values.mon}
                   />
-                  <label className="form-check-label" for="mon">
+                  <label className="form-check-label" htmlFor="mon">
                     Segunda
                   </label>
                 </div>
@@ -754,24 +902,21 @@ const AddEditService = (props) => {
                 Ativo
               </label>
             </div>
-
-            <div className="form-check">
-              <input
-                type="checkbox"
-                className="form-check-input"
-                id="pickup_customer"
-                onChange={onChangeCheck}
-                value={values.pickup_customer}
-                checked={values.pickup_customer}
-              />
-              <label className="form-check-label" htmlFor="pickup_customer">
-                Buscar o cliente
-              </label>
-            </div>
-
             <button type="submit" className="btn btn-primary">
               Salvar
             </button>
+            <a
+              name=""
+              id=""
+              class="btn btn-primary"
+              href="javascript:void(0)"
+              role="button"
+              onClick={() => {
+                teste();
+              }}
+            >
+              Teste
+            </a>
           </form>
         </div>
       )}
@@ -779,7 +924,7 @@ const AddEditService = (props) => {
   );
 };
 
-export default withRouter(AddEditService);
+export default AddEditService;
 
 /* function handleValidation() {
     let fields = this.state.fields;

@@ -3,7 +3,7 @@ import React from "react";
 const Header = () => {
   return (
     <nav className="navbar navbar-expand-sm navbar-light bg-light">
-      <a className="navbar-brand" href="#">
+      <a className="navbar-brand" href="javascript:void(0)">
         Gezi
       </a>
       {/* <button

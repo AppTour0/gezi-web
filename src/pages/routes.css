@@ -3,6 +3,6 @@ html, body, #root, #root > div{
 
   }
 .container-fluid{
-    min-height: 100%;
+    min-height: 90%;
     position:relative;
 }

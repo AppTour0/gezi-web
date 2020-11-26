@@ -3,8 +3,6 @@ import StoreContext from "../../components/Store/Context";
 import UserContext from "../../components/Store/Data/UserContext";
 import { useHistory } from "react-router-dom";
 import "./Home.css";
-import { PASS_CRYPT } from "../../.key";
-import  bcrypt  from  "bcryptjs";
 
 const PagesHome = () => {
   const { setToken } = useContext(StoreContext);
