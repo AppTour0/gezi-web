@@ -1,8 +1,8 @@
-html, body, #root, #root > div{
+html, body, #root, #root > div {
     height: 100%
 
   }
-.container-fluid{
-    min-height: 90%;
+.container{
+    min-height: 80%;
     position:relative;
 }

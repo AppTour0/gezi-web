@@ -46,6 +46,16 @@ const AddEditService = (props) => {
   const [galeryArray, setGaleryArray] = useState([]);
   const [galeryDisplay, setGaleryDisplay] = useState([]);
   const [haveImages, setHaveImages] = useState(false);
+  // testa se houve alteração do dia do passeio
+  const [days, setDays] = useState({
+    sun: false,
+    mon: false,
+    tue: false,
+    wed: false,
+    thu: false,
+    fri: false,
+    sat: false,
+  });
 
   const descriptionRef = useRef();
   const valueRef = useRef();
@@ -55,16 +65,7 @@ const AddEditService = (props) => {
   const { idEnt } = useContext(EntContext);
   let now = new Date();
   let dbImages = [];
-  // testa se houve alteração do dia do passeio
-  const days = {
-    sun: false,
-    mon: false,
-    tue: false,
-    wed: false,
-    thu: false,
-    fri: false,
-    sat: false,
-  };
+  
 
   const currencyConfig = {
     locale: "pt-BR",
@@ -82,6 +83,8 @@ const AddEditService = (props) => {
 
   useEffect(() => {
     getServiceAsync();
+    const timer = setTimeout(() => { setError('') }, 3000);
+    return () => clearTimeout(timer);
   }, []);
 
   const getServiceAsync = async () => {
@@ -102,10 +105,10 @@ const AddEditService = (props) => {
         variables: { idService },
       });
       if (!loadingService) {
+        console.log(data.services[0]);
         setValues(data.services[0]);
         setLoading(loadingService);
         setHaveImages(data.services[0].services_images.length > 0);
-        console.log("tem imagem? - " + haveImages);
         days["sun"] = data.services[0].sun;
         days["mon"] = data.services[0].mon;
         days["tue"] = data.services[0].tue;
@@ -217,7 +220,7 @@ const AddEditService = (props) => {
       placeRef.current.focus();
     }
 
-    if (values.value) {
+    if (values.value && isNaN(values.value)) {
       let value = values.value.replace(/\D/g, "");
       let valueLen = value.length;
       let valueFinal =
@@ -306,8 +309,9 @@ const AddEditService = (props) => {
             fri: values.fri,
             sat: values.sat,
             sun: values.sun,
-            city: "",
+            city: values.city,
           };
+
           // add imagens do serviço
           let images = await saveImage(idService);
           if (images.length > 0) {
@@ -315,15 +319,19 @@ const AddEditService = (props) => {
               variables: { objects: images },
             });
           }
-
-          await changeWeekDay().then(async (value) => {
+          
+          await changeWeekDay().then(async (value) => {            
             await setUpdateService({
-              variables: { id: idService, objects: changesService },
+              variables: { id: idService, changes: changesService },
               refetchQueries: [{ query: getServices, variables: { idEnt } }],
+            }).then((value) => {
+              setLoading(false);
+              return history.push("/services");
             });
           });
         } catch (error) {
-          return setError(error.message);
+          setError(error.message);
+          setLoading(false);
         }
       }
     }
@@ -380,36 +388,40 @@ const AddEditService = (props) => {
     let index = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     let dates = [];
 
-    for (var i = 0; i < index; i++) {
-      console.log(Date.parse(today));
-      let todayWeekday = Date.parse(today).getDay();
-      console.log(todayWeekday);
-      if (Date.parse(today).getDay() == weekDay) {
-        dates.push(today);
+    try {      
+      for (var i = 0; i < index; i++) {
+        let todayWeekday = Date.parse(today);
+        let todayWeekdayDate = new Date(todayWeekday);
+        if (todayWeekdayDate.getDay() == weekDay) {
+          dates.push(today);
+        }
+        today =
+          now.getFullYear() + "-" + now.getMonth() + "-" + (now.getDate() + 1);
       }
-      today =
-        now.getFullYear() + "-" + now.getMonth() + "-" + (now.getDate() + 1);
-    }
-
-    if (typePost == "delete") {
-      await setDeleteServiceItems({
-        variables: { dates: dates, idService: idService },
-        refetchQueries: [{ query: getServices, variables: { idEnt } }],
-      });
-    } else {
-      let objectItems = [];
-      for (let index = 0; index < dates.length; index++) {
-        objectItems.push({
-          service_id: idService,
-          date: dates[index],
-          type: values.type_tour,
-          sold_amount: 0,
+  
+      if (typePost == "delete") {
+        await setDeleteServiceItems({
+          variables: { dates: dates, idService: idService },
+          refetchQueries: [{ query: getServices, variables: { idEnt } }],
+        });
+      } else {
+        let objectItems = [];
+        for (let index = 0; index < dates.length; index++) {
+          objectItems.push({
+            service_id: idService,
+            date: dates[index],
+            type: values.type_tour,
+            sold_amount: 0,
+          });
+        }
+        await setServiceItems({
+          variables: { id: idService, objects: objectItems },
+          refetchQueries: [{ query: getServices, variables: { idEnt } }],
         });
       }
-      await setServiceItems({
-        variables: { id: idService, objects: objectItems },
-        refetchQueries: [{ query: getServices, variables: { idEnt } }],
-      });
+    } catch (error) {
+      setError(error.message);
+      setLoading(false);
     }
   }
 
@@ -518,6 +530,7 @@ const AddEditService = (props) => {
 
   function teste() {
     console.log(values);
+    console.log(days);
   }
 
   let insert = typePost === "insert";
@@ -581,7 +594,7 @@ const AddEditService = (props) => {
                 <a
                   name=""
                   id=""
-                  class="btn btn-primary"
+                  className="btn btn-primary"
                   href="javascript:void(0)"
                   role="button"
                   data-toggle="modal"
@@ -623,29 +636,29 @@ const AddEditService = (props) => {
             </div>
 
             <div
-              class="modal fade"
+              className="modal fade"
               id="exampleModal"
               tabindex="-1"
               role="dialog"
               aria-labelledby="exampleModalLabel"
               aria-hidden="true"
             >
-              <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">
+              <div className="modal-dialog" role="document">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title" id="exampleModalLabel">
                       Galeria de Imagens
                     </h5>
                     <button
                       type="button"
-                      class="close"
+                      className="close"
                       data-dismiss="modal"
                       aria-label="Close"
                     >
                       <span aria-hidden="true">&times;</span>
                     </button>
                   </div>
-                  <div class="modal-body">
+                  <div className="modal-body">
                     {haveImages && (
                       <div className="container">
                         <div className="row">
@@ -743,7 +756,7 @@ const AddEditService = (props) => {
               >
                 <option
                   selected={values.type_tour === "" ? "selected" : ""}
-                  value=""
+                  value={values.type_tour}
                 >
                   Selecione o tipo de veículo
                 </option>
@@ -908,7 +921,7 @@ const AddEditService = (props) => {
             <a
               name=""
               id=""
-              class="btn btn-primary"
+              className="btn btn-primary"
               href="javascript:void(0)"
               role="button"
               onClick={() => {

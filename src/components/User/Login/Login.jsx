@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import StoreContext from "../../Store/Context";
 import UserContext from "../../Store/Data/UserContext";
 import EntContext from "../../Store/Data/EntContext";
@@ -34,13 +34,18 @@ const UserLogin = () => {
     });
   }
 
+  useEffect(() => {
+    const timer = setTimeout(() => { setError('') }, 3000);
+    return () => clearTimeout(timer);
+  }, );
+
   const client = useApolloClient();
   const email = values.user;
   const password = values.password;
 
   async function submit(event) {
     event.preventDefault();
-    setLoading(true);    
+    setLoading(true);
     values.user = "";
     values.password = "";
     const message = "Falha na autenticação!";
@@ -52,9 +57,9 @@ const UserLogin = () => {
       });
 
       setLoading(loading);
-      setError(error);  
+      setError(error);
 
-      if (data.usuarios.length === 0){        
+      if (data.usuarios.length === 0) {
         return setError("Informe um usuario ou senha válido");
       }
 
@@ -78,8 +83,6 @@ const UserLogin = () => {
     } catch (e) {
       setError("Algo deu errado: " + e);
     }
-    
-    
   }
 
   return (
@@ -144,4 +147,9 @@ export default UserLogin;
 {error && (
           <div className="user-login__error">{error}</div>
         )}
+
+
+         <div className="alert alert-danger" role="alert">
+          <strong>{error}</strong>
+        </div> 
 */

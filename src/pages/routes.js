@@ -24,46 +24,42 @@ import {
   faTrash,
   faCamera,
   faArrowLeft,
-  faImages
+  faImages,
 } from "@fortawesome/free-solid-svg-icons";
 
-library.add(fab, faCheckSquare, faEdit, faTrash, faCamera, faArrowLeft, faImages);
+library.add(
+  fab,
+  faCheckSquare,
+  faEdit,
+  faTrash,
+  faCamera,
+  faArrowLeft,
+  faImages
+);
 
 const PagesRoute = () => (
-  <div>
-    <Header></Header>
-    <div className="container-fluid">
-      <div className="container">
-        <Router>
-          <ApolloProvider client={client}>
-            <ApolloHooksProvider client={client}>
-              <EntStoreProvider>
-                <UserStoreProvider>
-                  <StoreProvider>
-                    <Switch>
-                      <Route path="/login" component={Login} />
-                      <RoutesPrivate exact path="/" component={Home} />
-                      <RoutesPrivate
-                        exact
-                        path="/services"
-                        component={Services}
-                      />
-                      <RoutesPrivate
-                        exact
-                        path="/services/addEdit/:type/:idService"
-                        component={AddEditService}
-                      />
-                    </Switch>
-                  </StoreProvider>
-                </UserStoreProvider>
-              </EntStoreProvider>
-            </ApolloHooksProvider>
-          </ApolloProvider>
-        </Router>
-      </div>
-    </div>
-    <Footer></Footer>
-  </div>
+  <Router>
+    <ApolloProvider client={client}>
+      <ApolloHooksProvider client={client}>
+        <EntStoreProvider>
+          <UserStoreProvider>
+            <StoreProvider>
+              <Switch>
+                <Route path="/login" component={Login} />
+                <RoutesPrivate exact path="/" component={Home} />
+                <RoutesPrivate exact path="/services" component={Services} />
+                <RoutesPrivate
+                  exact
+                  path="/services/addEdit/:type/:idService"
+                  component={AddEditService}
+                />
+              </Switch>
+            </StoreProvider>
+          </UserStoreProvider>
+        </EntStoreProvider>
+      </ApolloHooksProvider>
+    </ApolloProvider>
+  </Router>
 );
 
 export default PagesRoute;

@@ -104,6 +104,17 @@ console.log("loading da pagina " + loadingPage); */
       {loading && <ReactLoading type={"spin"} color={"#0F4C81"} height={'10%'} width={'10%'} className="loading"/>}
       {!loading &&
         <div>
+           <a
+            name=""
+            id="btn-voltar"
+            className="btn btn-link"
+            href="javascript:void(0)"
+            role="button"
+            onClick={() => history.push("/")}
+          >
+            <FontAwesomeIcon icon="arrow-left" /> Voltar
+          </a>
+          <br></br>
           <a
             name=""
             id=""

@@ -4,4 +4,6 @@
     margin-top: 20px ;
     padding: 10px;
     min-height: 50px;
+    clear: both;
+    position: relative;
 }
