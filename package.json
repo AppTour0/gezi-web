@@ -19,6 +19,7 @@
     "aws-sdk": "^2.799.0",
     "bcryptjs": "^2.4.3",
     "bootstrap": "^4.5.3",
+    "express": "^4.17.1",
     "firebase": "^8.0.2",
     "graphql": "^15.4.0",
     "graphql-tag": "^2.11.0",
@@ -26,6 +27,7 @@
     "js-cookie": "^2.2.1",
     "node-gyp": "^7.1.2",
     "node-pre-gyp": "^0.16.0",
+    "path": "^0.12.7",
     "pbkdf2": "^3.1.1",
     "react": "^17.0.1",
     "react-apollo": "^3.1.5",
@@ -41,7 +43,8 @@
     "web-vitals": "^0.2.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "node server",
+    "postinstall": "npm run build",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
