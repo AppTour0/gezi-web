@@ -5,15 +5,20 @@ import { useQuery, useMutation } from "@apollo/client";
 import EntContext from "../../components/Store/Data/EntContext";
 import { useHistory } from "react-router-dom";
 import "./Services.css";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { confirmAlert } from 'react-confirm-alert'; 
-import 'react-confirm-alert/src/react-confirm-alert.css'; 
-import ReactLoading from 'react-loading';
-import "../Loading.css"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { confirmAlert } from "react-confirm-alert";
+import "react-confirm-alert/src/react-confirm-alert.css";
+import ReactLoading from "react-loading";
+import "../Loading.css";
 
-const Services = () => {
+const Services = (props) => {
+  let idEntForProps = props.computedMatch.params.id;
   const history = useHistory();
-  const { idEnt } = useContext(EntContext);
+  let { idEnt } = useContext(EntContext);
+
+  if (idEntForProps > 0) {
+    idEnt = idEntForProps;
+  }
 
   const [loadingPage, setLoading] = useState(false);
   const [delService] = useMutation(deleteService);
@@ -22,7 +27,7 @@ const Services = () => {
   const { loading, error, data } = useQuery(getServices, {
     variables: { idEnt },
   });
-/* setLoading(loading);
+  /* setLoading(loading);
 console.log("loading da pagina " + loadingPage); */
 
   //setError(error);
@@ -31,7 +36,13 @@ console.log("loading da pagina " + loadingPage); */
   if (errorGet) return <p>Error {errorGet}</p>; */
 
   function addOrEditService(type, idService) {
-    return history.push("services/addEdit/" + type + "/" + idService);
+    if (idEntForProps > 0) {
+      return history.push(
+        "/services/addEdit/" + type + "/" + idService + "/" + idEntForProps
+      );
+    } else {
+      return history.push("/services/addEdit/" + type + "/" + idService);
+    }
   }
 
   /* const options = {
@@ -63,33 +74,37 @@ console.log("loading da pagina " + loadingPage); */
     confirmAlert({
       closeOnEscape: false,
       closeOnClickOutside: false,
-      title: 'Atenção!',
-      message: 'Tem certeza que deseja excluir este passeio?',
+      title: "Atenção!",
+      message: "Tem certeza que deseja excluir este passeio?",
       buttons: [
         {
-          label: 'Sim',
-          onClick: (async () => {
+          label: "Sim",
+          onClick: async () => {
             setLoading(true);
             try {
               const { data, loading, error } = await delService({
                 variables: { id },
                 refetchQueries: [{ query: getServices, variables: { idEnt } }],
-              });        
+              });
               setLoading(loading);
               setError(error);
               if (error) return setError(error);
             } catch (error) {
               setLoading(false);
               setError(error.message);
-            } 
-          })
+            }
+          },
         },
         {
-          label: 'Não',
-          onClick: () => null
-        }
-      ]
+          label: "Não",
+          onClick: () => null,
+        },
+      ],
     });
+  }
+
+  function back() {
+    idEntForProps == 0 ? history.push("/") : history.push("/enterprises");
   }
 
   let orderLen = 0;
@@ -97,20 +112,30 @@ console.log("loading da pagina " + loadingPage); */
 
   return (
     <div>
-      {errorPage && <div className="alert alert-danger" role="alert">
-        <strong>{error}</strong>
-      </div>}
+      {errorPage && (
+        <div className="alert alert-danger" role="alert">
+          <strong>{error}</strong>
+        </div>
+      )}
 
-      {loading && <ReactLoading type={"spin"} color={"#0F4C81"} height={'10%'} width={'10%'} className="loading"/>}
-      {!loading &&
+      {loading && (
+        <ReactLoading
+          type={"spin"}
+          color={"#0F4C81"}
+          height={"10%"}
+          width={"10%"}
+          className="loading"
+        />
+      )}
+      {!loading && (
         <div>
-           <a
+          <a
             name=""
             id="btn-voltar"
             className="btn btn-link"
             href="javascript:void(0)"
             role="button"
-            onClick={() => history.push("/")}
+            onClick={() => back()}
           >
             <FontAwesomeIcon icon="arrow-left" /> Voltar
           </a>
@@ -156,7 +181,7 @@ console.log("loading da pagina " + loadingPage); */
                           href="javascript:void(0)"
                           onClick={() => addOrEditService("update", service.id)}
                         >
-                          <FontAwesomeIcon icon="edit"/>
+                          <FontAwesomeIcon icon="edit" />
                         </a>
                       </td>
                       <td>
@@ -165,11 +190,11 @@ console.log("loading da pagina " + loadingPage); */
                           id=""
                           className={`center-btn ${deleteActive}`}
                           href="javascript:void(0)"
-                          onClick={ async () => {
-                            handleDelete(service.id)
+                          onClick={async () => {
+                            handleDelete(service.id);
                           }}
                         >
-                          <FontAwesomeIcon icon="trash"/>
+                          <FontAwesomeIcon icon="trash" />
                         </a>
                       </td>
                     </tr>
@@ -179,7 +204,7 @@ console.log("loading da pagina " + loadingPage); */
             </tbody>
           </table>
         </div>
-      }
+      )}
     </div>
   );
 };

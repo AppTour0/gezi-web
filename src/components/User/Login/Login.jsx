@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import StoreContext from "../../Store/Context";
 import UserContext from "../../Store/Data/UserContext";
 import EntContext from "../../Store/Data/EntContext";
+import LevelContext from "../../Store/Data/LevelContext";
 import UIButton from "../../UI/Button/Button";
 import "./Login.css";
 import ReactLoading from "react-loading";
@@ -22,6 +23,7 @@ const UserLogin = () => {
   const { setToken } = useContext(StoreContext);
   const { setIdUser } = useContext(UserContext);
   const { setIdEnt } = useContext(EntContext);
+  const { setLevel } = useContext(LevelContext);
   const history = useHistory();
   const [loading, setLoading] = useState(false);
 
@@ -48,7 +50,7 @@ const UserLogin = () => {
     setLoading(true);
     values.user = "";
     values.password = "";
-    const message = "Falha na autenticação!";
+    const message = "Email ou senha incorreto!";
 
     try {
       const { data, loading, error } = await client.query({
@@ -65,7 +67,7 @@ const UserLogin = () => {
 
       if (data.usuarios.length > 0) {
         if (data.usuarios[0].enterprise == null) {
-          return setError("Você não tem acesso a este módulo");
+          return setError(message);
         }
 
         const hash = bcrypt.compareSync(password, data.usuarios[0].password);
@@ -73,6 +75,7 @@ const UserLogin = () => {
           setToken("1234");
           setIdUser(data.usuarios[0].id);
           setIdEnt(data.usuarios[0].enterprise.id);
+          setLevel(data.usuarios[0].level);
           return history.push("/");
         } else {
           setError(message);

@@ -25,7 +25,10 @@ import {
   faCamera,
   faArrowLeft,
   faImages,
+  faBus,
 } from "@fortawesome/free-solid-svg-icons";
+import LevelStoreProvider from "../components/Store/Data/LevelProvider";
+import Enterprises from "./Enterprises/Enterprises";
 
 library.add(
   fab,
@@ -34,7 +37,8 @@ library.add(
   faTrash,
   faCamera,
   faArrowLeft,
-  faImages
+  faImages,
+  faBus
 );
 
 const PagesRoute = () => (
@@ -43,18 +47,25 @@ const PagesRoute = () => (
       <ApolloHooksProvider client={client}>
         <EntStoreProvider>
           <UserStoreProvider>
+          <LevelStoreProvider>
             <StoreProvider>
               <Switch>
                 <Route path="/login" component={Login} />
                 <RoutesPrivate exact path="/" component={Home} />
-                <RoutesPrivate exact path="/services" component={Services} />
+                <RoutesPrivate exact path="/services/:id" component={Services} />
                 <RoutesPrivate
                   exact
-                  path="/services/addEdit/:type/:idService"
+                  path="/services/addEdit/:type/:idService/:idEnt?"
                   component={AddEditService}
+                />
+                <RoutesPrivate
+                  exact
+                  path="/enterprises"
+                  component={Enterprises}
                 />
               </Switch>
             </StoreProvider>
+          </LevelStoreProvider>
           </UserStoreProvider>
         </EntStoreProvider>
       </ApolloHooksProvider>

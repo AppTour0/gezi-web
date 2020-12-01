@@ -21,11 +21,14 @@ import ReactLoading from "react-loading";
 import "../Loading.css";
 import storage from "../../utils/firebase/index";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { confirmAlert } from 'react-confirm-alert'; 
+import { confirmAlert } from "react-confirm-alert";
+import LevelContext from "../../components/Store/Data/LevelContext";
 
 const AddEditService = (props) => {
   var typePost = props.computedMatch.params.type;
   var idService = props.computedMatch.params.idService;
+  var idEntForProps = props.computedMatch.params.idEnt;
+  const { level } = useContext(LevelContext);
   const history = useHistory();
   const [error, setError] = useState(null);
   const [formErrors, setFormErrors] = useState([]);
@@ -65,7 +68,6 @@ const AddEditService = (props) => {
   const { idEnt } = useContext(EntContext);
   let now = new Date();
   let dbImages = [];
-  
 
   const currencyConfig = {
     locale: "pt-BR",
@@ -83,7 +85,9 @@ const AddEditService = (props) => {
 
   useEffect(() => {
     getServiceAsync();
-    const timer = setTimeout(() => { setError('') }, 3000);
+    const timer = setTimeout(() => {
+      setError("");
+    }, 3000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -105,7 +109,6 @@ const AddEditService = (props) => {
         variables: { idService },
       });
       if (!loadingService) {
-        console.log(data.services[0]);
         setValues(data.services[0]);
         setLoading(loadingService);
         setHaveImages(data.services[0].services_images.length > 0);
@@ -118,7 +121,6 @@ const AddEditService = (props) => {
         days["sat"] = data.services[0].sat;
         if (haveImages) {
           data.services[0].services_images.map((image) => {
-            console.log(image.image_url);
             //setGaleryArray(imagesArray.concat(image.image_url));
             setGaleryDisplay(galeryDisplay.concat(image.image_url));
           });
@@ -260,7 +262,7 @@ const AddEditService = (props) => {
           fri: values.fri,
           sat: values.sat,
           sun: values.sun,
-          city: "Passeios",
+          city: values.city == "" ? "Passeios" : values.city,
         };
 
         try {
@@ -284,7 +286,7 @@ const AddEditService = (props) => {
               refetchQueries: [{ query: getServices, variables: { idEnt } }],
             }).then((value) => {
               setLoading(false);
-              return history.push("/services");
+              return back();
             });
           });
         } catch (error) {
@@ -319,14 +321,14 @@ const AddEditService = (props) => {
               variables: { objects: images },
             });
           }
-          
-          await changeWeekDay().then(async (value) => {            
+
+          await changeWeekDay().then(async (value) => {
             await setUpdateService({
               variables: { id: idService, changes: changesService },
               refetchQueries: [{ query: getServices, variables: { idEnt } }],
             }).then((value) => {
               setLoading(false);
-              return history.push("/services");
+              return back();
             });
           });
         } catch (error) {
@@ -388,7 +390,7 @@ const AddEditService = (props) => {
     let index = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     let dates = [];
 
-    try {      
+    try {
       for (var i = 0; i < index; i++) {
         let todayWeekday = Date.parse(today);
         let todayWeekdayDate = new Date(todayWeekday);
@@ -398,7 +400,7 @@ const AddEditService = (props) => {
         today =
           now.getFullYear() + "-" + now.getMonth() + "-" + (now.getDate() + 1);
       }
-  
+
       if (typePost == "delete") {
         await setDeleteServiceItems({
           variables: { dates: dates, idService: idService },
@@ -496,36 +498,44 @@ const AddEditService = (props) => {
     setImagesDisplay([...imagesDisplay]);
   }
 
-  async function removeImageEdit(image){
+  async function removeImageEdit(image) {
     confirmAlert({
       closeOnEscape: false,
       closeOnClickOutside: false,
-      title: 'Atenção!',
-      message: 'Tem certeza que deseja excluir esta imagem?',
+      title: "Atenção!",
+      message: "Tem certeza que deseja excluir esta imagem?",
       buttons: [
         {
-          label: 'Sim',
-          onClick: (async () => {
+          label: "Sim",
+          onClick: async () => {
             setLoading(true);
             try {
               const { data, loading, error } = await deleteServiceImages({
                 variables: { id: image.id },
-                refetchQueries: [{ query: getService, variables: { idService } }],
+                refetchQueries: [
+                  { query: getService, variables: { idService } },
+                ],
               });
               setLoading(loading);
               if (error) return setError(error);
             } catch (error) {
               setLoading(false);
               setError(error.message);
-            } 
-          })
+            }
+          },
         },
         {
-          label: 'Não',
-          onClick: () => null
-        }
-      ]
+          label: "Não",
+          onClick: () => null,
+        },
+      ],
     });
+  }
+
+  function back() {
+    level == "master" && idEntForProps
+      ? history.push("/services/" + idEntForProps)
+      : history.push("/services/0");
   }
 
   function teste() {
@@ -561,7 +571,7 @@ const AddEditService = (props) => {
             className="btn btn-link"
             href="javascript:void(0)"
             role="button"
-            onClick={() => history.push("/services")}
+            onClick={() => back()}
           >
             <FontAwesomeIcon icon="arrow-left" /> Voltar
           </a>
@@ -598,7 +608,7 @@ const AddEditService = (props) => {
                   href="javascript:void(0)"
                   role="button"
                   data-toggle="modal"
-                  data-target="#exampleModal"
+                  data-target="#galeryModal"
                 >
                   <FontAwesomeIcon icon="images" /> Galeria
                 </a>
@@ -637,16 +647,16 @@ const AddEditService = (props) => {
 
             <div
               className="modal fade"
-              id="exampleModal"
-              tabindex="-1"
+              id="galeryModal"
+              tabIndex="-1"
               role="dialog"
-              aria-labelledby="exampleModalLabel"
+              aria-labelledby="galeryModalLabel"
               aria-hidden="true"
             >
               <div className="modal-dialog" role="document">
                 <div className="modal-content">
                   <div className="modal-header">
-                    <h5 className="modal-title" id="exampleModalLabel">
+                    <h5 className="modal-title" id="galeryModalLabel">
                       Galeria de Imagens
                     </h5>
                     <button
@@ -663,7 +673,7 @@ const AddEditService = (props) => {
                       <div className="container">
                         <div className="row">
                           {values.services_images.map((image) => (
-                            <div className="wrapper-galery">
+                            <div key={image.id} className="wrapper-galery">
                               <a
                                 className="close close-button"
                                 onClick={() => removeImageEdit(image)}
@@ -771,6 +781,21 @@ const AddEditService = (props) => {
                 ))}
               </select>
             </div>
+
+            {level === "master" && (
+              <div className="form-group">
+                <label htmlFor="city">Cidade</label>
+                <input
+                  id="city"
+                  type="text"
+                  name="city"
+                  onChange={onChange}
+                  value={values.city}
+                  className="form-control"
+                  placeholder="Cidade"
+                />
+              </div>
+            )}
 
             <div className="form-group">
               <label htmlFor="place">Descreva o Local de Partida</label>
@@ -918,18 +943,6 @@ const AddEditService = (props) => {
             <button type="submit" className="btn btn-primary">
               Salvar
             </button>
-            <a
-              name=""
-              id=""
-              className="btn btn-primary"
-              href="javascript:void(0)"
-              role="button"
-              onClick={() => {
-                teste();
-              }}
-            >
-              Teste
-            </a>
           </form>
         </div>
       )}
