@@ -1,7 +1,7 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 //import { Alert } from 'reactstrap';
-import { getServices, deleteService } from "./Queries";
-import { useQuery, useMutation } from "@apollo/client";
+import { getServices, deleteService, getServiceImages } from "./Queries";
+import { useQuery, useMutation, useApolloClient } from "@apollo/client";
 import EntContext from "../../components/Store/Data/EntContext";
 import { useHistory } from "react-router-dom";
 import "./Services.css";
@@ -10,30 +10,41 @@ import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
 import ReactLoading from "react-loading";
 import "../Loading.css";
+import storage from "../../utils/firebase/index";
 
 const Services = (props) => {
   let idEntForProps = props.computedMatch.params.id;
   const history = useHistory();
   let { idEnt } = useContext(EntContext);
-
   if (idEntForProps > 0) {
     idEnt = idEntForProps;
   }
-
-  const [loadingPage, setLoading] = useState(false);
+  const client = useApolloClient();
+  const [loading, setLoading] = useState(true);
   const [delService] = useMutation(deleteService);
-  const [errorPage, setError] = useState(null);
+  const [error, setError] = useState(null);
+  const [values, setValues] = useState([]);
 
-  const { loading, error, data } = useQuery(getServices, {
+  useEffect(() => {
+    getServiceAsync();
+    const timer = setTimeout(() => {
+      setError("");
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const getServiceAsync = async () => {
+    await client.query({
+      query: getServices,
+      variables: { idEnt },
+    }).then((data) => {
+      setValues(data.data);
+      setLoading(data.loading);
+    });
+  }
+  /* const { loading, error, data } = useQuery(getServices, {
     variables: { idEnt },
-  });
-  /* setLoading(loading);
-console.log("loading da pagina " + loadingPage); */
-
-  //setError(error);
-
-  /* if (loadingService) return <p>Loading...</p>;
-  if (errorGet) return <p>Error {errorGet}</p>; */
+  }); */
 
   function addOrEditService(type, idService) {
     if (idEntForProps > 0) {
@@ -82,10 +93,21 @@ console.log("loading da pagina " + loadingPage); */
           onClick: async () => {
             setLoading(true);
             try {
-              const { data, loading, error } = await delService({
+              const { data } = await client.query({
+                query: getServiceImages,
+                variables: { idService: id },
+              });
+              /* deleta as imagens */
+              let images = data.services_images;
+              for await (let item of images) {
+                await storage.ref().child(item.file_path).delete();
+              }
+              /* deleta os serviços */
+              const { loading, error } = await delService({
                 variables: { id },
                 refetchQueries: [{ query: getServices, variables: { idEnt } }],
               });
+              getServiceAsync();
               setLoading(loading);
               setError(error);
               if (error) return setError(error);
@@ -112,7 +134,7 @@ console.log("loading da pagina " + loadingPage); */
 
   return (
     <div>
-      {errorPage && (
+      {error && (
         <div className="alert alert-danger" role="alert">
           <strong>{error}</strong>
         </div>
@@ -162,7 +184,7 @@ console.log("loading da pagina " + loadingPage); */
               </tr>
             </thead>
             <tbody>
-              {data.services.map(
+              {values.services.map(
                 (service) => (
                   (orderLen = service.orders.length),
                   orderLen == 0

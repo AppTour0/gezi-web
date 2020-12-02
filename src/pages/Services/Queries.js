@@ -186,8 +186,23 @@ export const deleteServiceImages = gql`
   }
 `;
 
+export const getServiceImages = gql`
+  query getImages($idService: Int){
+    services_images(
+      where: {service_id: {_eq: $idService}}, 
+      order_by: {id: asc}) 
+    {
+      default
+      id
+      image_url
+      service_id
+      file_path
+    }
+  }
+`;
+
 export const deleteServiceItems = gql`
-  mutation deleteServiceItems {
+  mutation deleteServiceItems($dates: timestamptz , $idService: Int) {
     delete_services_items(where: {
       date: {_in: $dates}, 
       _and: {service_id: {_eq: $idService}}

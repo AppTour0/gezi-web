@@ -92,41 +92,47 @@ const AddEditService = (props) => {
   }, []);
 
   const getServiceAsync = async () => {
-    const { data, loadingType, error } = await client.query({
-      query: getTypeTours,
-    });
-
-    setLoading(loadingType);
-    setTypes(data.type_tours);
+    await client
+      .query({
+        query: getTypeTours,
+      })
+      .then((values) => {
+        setTypes(values.data.type_tours);
+        setLoading(values.setLoading);
+      });
 
     if (typePost === "insert") {
       return setValues(serviceModel);
     }
 
     try {
-      const { data, loadingService, error } = await client.query({
-        query: getService,
-        variables: { idService },
-      });
-      if (!loadingService) {
-        setValues(data.services[0]);
-        setLoading(loadingService);
-        setHaveImages(data.services[0].services_images.length > 0);
-        days["sun"] = data.services[0].sun;
-        days["mon"] = data.services[0].mon;
-        days["tue"] = data.services[0].tue;
-        days["wed"] = data.services[0].wed;
-        days["thu"] = data.services[0].thu;
-        days["fri"] = data.services[0].fri;
-        days["sat"] = data.services[0].sat;
-        if (haveImages) {
-          data.services[0].services_images.map((image) => {
-            //setGaleryArray(imagesArray.concat(image.image_url));
-            setGaleryDisplay(galeryDisplay.concat(image.image_url));
-          });
-        }
-        return serviceModel;
-      }
+      await client
+        .query({
+          query: getService,
+          variables: { idService },
+        })
+        .then((valores) => {
+          let data = valores.data;
+          let haveImagesTest = data.services[0].services_images.length > 0;
+
+          setValues(data.services[0]);
+          setLoading(valores.loading);
+          setHaveImages(haveImagesTest);
+          days["sun"] = data.services[0].sun;
+          days["mon"] = data.services[0].mon;
+          days["tue"] = data.services[0].tue;
+          days["wed"] = data.services[0].wed;
+          days["thu"] = data.services[0].thu;
+          days["fri"] = data.services[0].fri;
+          days["sat"] = data.services[0].sat;
+
+          if (haveImages) {
+            data.services[0].services_images.map((image) => {
+              //setGaleryArray(imagesArray.concat(image.image_url));
+              setGaleryDisplay(galeryDisplay.concat(image.image_url));
+            });
+          }
+        });
     } catch (error) {
       setError(error.message);
     }
@@ -164,7 +170,6 @@ const AddEditService = (props) => {
   async function saveImage(idService) {
     let images = [];
     let imgDefault = true;
-
     if (haveImages) {
       imgDefault = false;
     }
@@ -180,7 +185,6 @@ const AddEditService = (props) => {
           .child(fileName);
 
         let uploadTask = await ref.put(item);
-
         let downloadUrl = await uploadTask.ref.getDownloadURL();
         let path = ref.fullPath;
 
@@ -235,12 +239,13 @@ const AddEditService = (props) => {
     setFormErrors(errors);
     if (Object.entries(errors).length === 0) formValidate = true;
 
-    var dateCreation =
-      now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
-
     if (formValidate) {
       setLoading(true);
       if (typePost == "insert") {
+        let dateCreation =
+          now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+        let finalDate = new Date(now.setDate(now.getDate() + 180));
+
         let objects = {
           name: values.name,
           description: values.description,
@@ -252,7 +257,7 @@ const AddEditService = (props) => {
           date_creation: dateCreation,
           id_enterprise: idEnt,
           init_date: dateCreation,
-          final_date: dateCreation,
+          final_date: finalDate,
           user_creation: idUser,
           pickup_customer: values.pickup_customer,
           mon: values.mon,
@@ -381,27 +386,33 @@ const AddEditService = (props) => {
 
   /* se for insert cria os dias se for update altera somente */
   async function createOrDeleteDays(weekDay, typePost) {
-    let today = now.getFullYear() + "-" + now.getMonth() + "-" + now.getDate();
-    console.log(values.final_date);
+    let today =
+      now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
     const diffTime = Math.abs(
       Date.parse(today) - Date.parse(values.final_date)
     );
-    console.log(diffTime);
     let index = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     let dates = [];
 
     try {
+      let todayWeekday = Date.parse(today);
+      let todayWeekdayDate = new Date(todayWeekday);
+
       for (var i = 0; i < index; i++) {
-        let todayWeekday = Date.parse(today);
-        let todayWeekdayDate = new Date(todayWeekday);
         if (todayWeekdayDate.getDay() == weekDay) {
           dates.push(today);
         }
+        todayWeekdayDate.setDate(todayWeekdayDate.getDate() + 1);        
         today =
-          now.getFullYear() + "-" + now.getMonth() + "-" + (now.getDate() + 1);
+          todayWeekdayDate.getFullYear() +
+          "-" +
+          (todayWeekdayDate.getMonth() + 1) +
+          "-" +
+          (todayWeekdayDate.getDate());
       }
 
       if (typePost == "delete") {
+        console.log(dates);
         await setDeleteServiceItems({
           variables: { dates: dates, idService: idService },
           refetchQueries: [{ query: getServices, variables: { idEnt } }],
