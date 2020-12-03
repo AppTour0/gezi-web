@@ -46,3 +46,9 @@
 .img-actions > label{
     margin-right: 10px;
 }
+label{
+    font-weight: 500;
+}
+.form-check-label{
+    font-weight: bold;
+}

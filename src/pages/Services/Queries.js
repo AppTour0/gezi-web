@@ -202,7 +202,7 @@ export const getServiceImages = gql`
 `;
 
 export const deleteServiceItems = gql`
-  mutation deleteServiceItems($dates: timestamptz , $idService: Int) {
+  mutation deleteServiceItems($dates: [timestamptz!] , $idService: Int) {
     delete_services_items(where: {
       date: {_in: $dates}, 
       _and: {service_id: {_eq: $idService}}

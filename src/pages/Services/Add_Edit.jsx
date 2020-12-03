@@ -125,6 +125,7 @@ const AddEditService = (props) => {
           days["thu"] = data.services[0].thu;
           days["fri"] = data.services[0].fri;
           days["sat"] = data.services[0].sat;
+          setPlaceDisabled(data.services[0].pickup_customer);
 
           if (haveImages) {
             data.services[0].services_images.map((image) => {
@@ -402,17 +403,16 @@ const AddEditService = (props) => {
         if (todayWeekdayDate.getDay() == weekDay) {
           dates.push(today);
         }
-        todayWeekdayDate.setDate(todayWeekdayDate.getDate() + 1);        
+        todayWeekdayDate.setDate(todayWeekdayDate.getDate() + 1);
         today =
           todayWeekdayDate.getFullYear() +
           "-" +
           (todayWeekdayDate.getMonth() + 1) +
           "-" +
-          (todayWeekdayDate.getDate());
+          todayWeekdayDate.getDate();
       }
 
       if (typePost == "delete") {
-        console.log(dates);
         await setDeleteServiceItems({
           variables: { dates: dates, idService: idService },
           refetchQueries: [{ query: getServices, variables: { idEnt } }],
@@ -428,7 +428,7 @@ const AddEditService = (props) => {
           });
         }
         await setServiceItems({
-          variables: { id: idService, objects: objectItems },
+          variables: { objects: objectItems },
           refetchQueries: [{ query: getServices, variables: { idEnt } }],
         });
       }
@@ -808,6 +808,19 @@ const AddEditService = (props) => {
               </div>
             )}
 
+            <div className="form-check">
+              <input
+                type="checkbox"
+                className="form-check-input"
+                id="pickup_customer"
+                onChange={onChangeCheck}
+                value={values.pickup_customer}
+                checked={values.pickup_customer}
+              />
+              <label className="form-check-label" htmlFor="pickup_customer">
+                Buscar o cliente
+              </label>
+            </div>
             <div className="form-group">
               <label htmlFor="place">Descreva o Local de Partida</label>
               <input
@@ -827,19 +840,7 @@ const AddEditService = (props) => {
                 </small>
               )}
             </div>
-            <div className="form-check">
-              <input
-                type="checkbox"
-                className="form-check-input"
-                id="pickup_customer"
-                onChange={onChangeCheck}
-                value={values.pickup_customer}
-                checked={values.pickup_customer}
-              />
-              <label className="form-check-label" htmlFor="pickup_customer">
-                Buscar o cliente
-              </label>
-            </div>
+
             <hr></hr>
             <h4>Selecione os dias da semana que o passeio estará diponível</h4>
             <div className="container days">

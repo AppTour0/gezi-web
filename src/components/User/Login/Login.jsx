@@ -70,7 +70,10 @@ const UserLogin = () => {
           return setError(message);
         }
 
+        console.log(data.usuarios[0]);
+
         const hash = bcrypt.compareSync(password, data.usuarios[0].password);
+        console.log(hash);
         if (hash) {
           setToken("1234");
           setIdUser(data.usuarios[0].id);
