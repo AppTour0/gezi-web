@@ -65,7 +65,10 @@ const AddEditService = (props) => {
   const placeRef = useRef();
 
   const { idUser } = useContext(UserContext);
-  const { idEnt } = useContext(EntContext);
+  let { idEnt } = useContext(EntContext);
+  if (level == "master" && idEntForProps){
+    idEnt = idEntForProps;
+  }
   let now = new Date();
   let dbImages = [];
 
@@ -285,7 +288,7 @@ const AddEditService = (props) => {
             let images = await saveImage(idNewService);
             if (images.length == 0) {
               setLoading(false);
-              return history.push("/services");
+              return back();
             }
             await setServiceImages({
               variables: { objects: images },

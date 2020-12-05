@@ -103,14 +103,15 @@ const Services = (props) => {
                 await storage.ref().child(item.file_path).delete();
               }
               /* deleta os serviços */
-              const { loading, error } = await delService({
+              //const { loading, error } = 
+              await delService({
                 variables: { id },
                 refetchQueries: [{ query: getServices, variables: { idEnt } }],
-              });
-              getServiceAsync();
-              setLoading(loading);
-              setError(error);
-              if (error) return setError(error);
+              }).then((values) => {
+                setLoading(values.loading);
+                setError(values.error);
+              });            
+              
             } catch (error) {
               setLoading(false);
               setError(error.message);
