@@ -44,8 +44,14 @@ export const getServices = gql`
         comment
       }
       city
+      time
+      ticket_type
+      amount_accents
       orders{
         id
+      }
+      typeTour{
+        description
       }
     }
   }
@@ -95,8 +101,14 @@ export const getService = gql`
         comment
       }
       city
+      time
+      ticket_type
+      amount_accents
       orders{
         id
+      }
+      typeTour{
+        description
       }
     }
   }

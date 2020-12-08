@@ -14,7 +14,7 @@
     margin-bottom: 10px;
 }
 
-#upload-file{
+#upload-file, .accents{
     display: none;
 }
 /* adiciona botão de fechar nas imagens*/
@@ -51,4 +51,17 @@ label{
 }
 .form-check-label{
     font-weight: bold;
+}
+.time-Label{
+    margin-top: 20px;
+}
+.time-form{
+    vertical-align:middle;
+    display:flex;
+    align-items:center;
+    margin-left: 0;
+    margin-top: 15px;
+}
+.time-form .form-group{
+    margin-bottom: 0;
 }

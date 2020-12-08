@@ -34,9 +34,10 @@ const AddEditService = (props) => {
   const [formErrors, setFormErrors] = useState([]);
   const [loading, setLoading] = useState(true);
   const client = useApolloClient();
-  const [values, setValues] = useState([]);
+  const [values, setValues] = useState(serviceModel);
   const [types, setTypes] = useState([]);
   const [placeDisabled, setPlaceDisabled] = useState(false);
+  const [displayAccents, setDisplayAccents] = useState("accents");
   const [setService, { serviceInsert }] = useMutation(addService);
   const [setServiceItems, { itemsInsert }] = useMutation(addServiceItems);
   const [setServiceImages, { imagesInsert }] = useMutation(addServiceImages);
@@ -63,14 +64,15 @@ const AddEditService = (props) => {
   const descriptionRef = useRef();
   const valueRef = useRef();
   const placeRef = useRef();
+  const accentsRef = useRef();
+  const timeRef = useRef();
 
   const { idUser } = useContext(UserContext);
   let { idEnt } = useContext(EntContext);
-  if (level == "master" && idEntForProps){
+  if (level == "master" && idEntForProps) {
     idEnt = idEntForProps;
   }
   let now = new Date();
-  let dbImages = [];
 
   const currencyConfig = {
     locale: "pt-BR",
@@ -104,9 +106,7 @@ const AddEditService = (props) => {
         setLoading(values.setLoading);
       });
 
-    if (typePost === "insert") {
-      return setValues(serviceModel);
-    }
+    if (typePost === "insert") return;
 
     try {
       await client
@@ -115,24 +115,27 @@ const AddEditService = (props) => {
           variables: { idService },
         })
         .then((valores) => {
-          let data = valores.data;
-          let haveImagesTest = data.services[0].services_images.length > 0;
+          let data = valores.data.services[0];
+          let haveImagesTest = data.services_images.length > 0;
 
-          setValues(data.services[0]);
+          setValues(serviceModel(data));
           setLoading(valores.loading);
           setHaveImages(haveImagesTest);
-          days["sun"] = data.services[0].sun;
-          days["mon"] = data.services[0].mon;
-          days["tue"] = data.services[0].tue;
-          days["wed"] = data.services[0].wed;
-          days["thu"] = data.services[0].thu;
-          days["fri"] = data.services[0].fri;
-          days["sat"] = data.services[0].sat;
-          setPlaceDisabled(data.services[0].pickup_customer);
+          days["sun"] = data.sun;
+          days["mon"] = data.mon;
+          days["tue"] = data.tue;
+          days["wed"] = data.wed;
+          days["thu"] = data.thu;
+          days["fri"] = data.fri;
+          days["sat"] = data.sat;
+          setPlaceDisabled(data.pickup_customer);
+
+          data.ticket_type == "car"
+            ? setDisplayAccents("")
+            : setDisplayAccents("accents");
 
           if (haveImages) {
-            data.services[0].services_images.map((image) => {
-              //setGaleryArray(imagesArray.concat(image.image_url));
+            data.services_images.map((image) => {
               setGaleryDisplay(galeryDisplay.concat(image.image_url));
             });
           }
@@ -144,7 +147,14 @@ const AddEditService = (props) => {
 
   function onChange(event) {
     const { value, name } = event.target;
+    setValues({
+      ...values,
+      [name]: value,
+    });
+  }
 
+  function onChangeTimes(event) {
+    const { value, name } = event.target;
     setValues({
       ...values,
       [name]: value,
@@ -152,9 +162,23 @@ const AddEditService = (props) => {
   }
 
   function onChangeCheck(event) {
+    /* NÃO SEI PORQUE!!! MAS SE NÃO FOR ASSIM NÃO FUNCIONA!!! */
     const name = event.target.id;
     const value = event.target.checked;
-    setPlaceDisabled(value);
+
+    if (name == "pickup_customer") {
+      setPlaceDisabled(value);
+    }
+
+    setValues({
+      ...values,
+      [name]: value,
+    });
+  }
+
+  function onChangeRadio(event) {
+    const { value, name, id } = event.target;
+    id == "ticket-car" ? setDisplayAccents("") : setDisplayAccents("accents");
 
     setValues({
       ...values,
@@ -229,6 +253,15 @@ const AddEditService = (props) => {
       errors["place"] = "Deve ter mais que 3 caracteres!";
       placeRef.current.focus();
     }
+    if (parseInt(values.amount_accents) == 0 && displayAccents == "") {
+      errors["accents"] = "não pode ser zero!";
+      accentsRef.current.focus();
+    }
+
+    if (!values.time1 || !values.time2) {
+      errors["time"] = "informe o horário aproximado da saída!";
+      timeRef.current.focus();
+    }
 
     if (values.value && isNaN(values.value)) {
       let value = values.value.replace(/\D/g, "");
@@ -272,6 +305,10 @@ const AddEditService = (props) => {
           sat: values.sat,
           sun: values.sun,
           city: values.city == "" ? "Passeios" : values.city,
+          ticket_type: values.ticket_type,
+          amount_accents:
+            displayAccents != "" ? 0 : parseInt(values.amount_accents),
+          time: values.time1 + "|" + values.time2,
         };
 
         try {
@@ -321,6 +358,10 @@ const AddEditService = (props) => {
             sat: values.sat,
             sun: values.sun,
             city: values.city,
+            ticket_type: values.ticket_type,
+            amount_accents:
+              displayAccents != "" ? 0 : parseInt(values.amount_accents),
+            time: values.time1 + "|" + values.time2,
           };
 
           // add imagens do serviço
@@ -769,6 +810,63 @@ const AddEditService = (props) => {
               )}
             </div>
 
+            <div className="row">
+              <div className="col-md-6">
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="ticket_type"
+                    id="ticket-person"
+                    value="person"
+                    onChange={onChangeRadio}
+                    checked={displayAccents == "accents"}
+                  />
+                  <label className="form-check-label" htmlFor="ticket-person">
+                    Valor por pessoa
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="ticket_type"
+                    id="ticket-car"
+                    value="car"
+                    onChange={onChangeRadio}
+                    checked={displayAccents == ""}
+                  />
+                  <label className="form-check-label" htmlFor="ticket-car">
+                    Valor por veículo
+                  </label>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="form-group">
+                  <label htmlFor="amount_accents" className={displayAccents}>
+                    Quantiade de Acentos no Veículo
+                  </label>
+                  <input
+                    id="amount_accents"
+                    type="number"
+                    name="amount_accents"
+                    onChange={onChange}
+                    className={`form-control ${displayAccents}`}
+                    placeholder="Digite a quantidade de acentos do veículo"
+                    required={displayAccents == ""}
+                    value={values.amount_accents}
+                    min="0"
+                    ref={accentsRef}
+                  />
+                  {formErrors.accents && (
+                    <small className="form-text text-danger">
+                      {formErrors.accents}
+                    </small>
+                  )}
+                </div>
+              </div>
+            </div>
+            <br />
             <div className="form-group">
               <label htmlFor="type_tour">Tipo do Veículo</label>
               <select
@@ -843,7 +941,42 @@ const AddEditService = (props) => {
                 </small>
               )}
             </div>
-
+            <h4 className="time-Label">Horário aproximado de partida</h4>
+            <div className="form-row time-form">
+              <h5 className="">Entre</h5>
+              <div className="col-md-2 col-sm-3">
+                <div className="form-group">
+                  <input
+                    id="time1"
+                    type="time"
+                    name="time1"
+                    onChange={onChangeTimes}
+                    className="form-control"
+                    value={values.time1}
+                    ref={timeRef}
+                  />
+                </div>
+              </div>
+              <h5>e</h5>
+              <div className="col-md-2 col-sm-3">
+                <div className="form-group">
+                  <input
+                    id="time2"
+                    type="time"
+                    name="time2"
+                    onChange={onChangeTimes}
+                    className="form-control"
+                    value={values.time2}
+                  />
+                </div>
+              </div>
+              {formErrors.time && (
+                <small className="form-text text-danger">
+                  {formErrors.time}
+                </small>
+              )}
+            </div>
+            <br />
             <hr></hr>
             <h4>Selecione os dias da semana que o passeio estará diponível</h4>
             <div className="container days">
