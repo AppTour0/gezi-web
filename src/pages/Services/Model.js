@@ -27,6 +27,7 @@ export const serviceModel = (object = []) => {
     time: "",
     time1: "",
     time2: "",
+    to_match: false,
     feedbacks: {},
     orders: {},
     empresa: {},
@@ -37,8 +38,6 @@ export const serviceModel = (object = []) => {
   if (object.length == 0){
     return data;
   }
-
-  console.log(object);
 
   let times = object.time != null ? object.time.split('|') : "";
 
@@ -75,6 +74,7 @@ export const serviceModel = (object = []) => {
     data.ticket_type = item[0] == "ticket_type" ? item[1] : data.ticket_type;
     data.time1 = times[0];
     data.time2 = times[1];
+    data.to_match = times[0] == "" ? true : false;
   })
   return data;
 }
