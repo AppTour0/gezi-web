@@ -1,11 +1,14 @@
 import React from "react";
+import "./Header.css";
 
 const Header = () => {
   return (
     <nav className="navbar navbar-expand-sm navbar-light bg-light">
-      <a className="navbar-brand" href="javascript:void(0)">
-        Gezi
-      </a>
+      <header className="header">
+        <a className="navbar-brand" href="javascript:void(0)">
+          <img className="float-left logoFooter" src="LogoFooter.png" alt=""/>
+        </a>
+      </header>
       {/* <button
         className="navbar-toggler d-lg-none"
         type="button"

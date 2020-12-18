@@ -36,7 +36,7 @@ const AddEditService = (props) => {
   const client = useApolloClient();
   const [values, setValues] = useState(serviceModel);
   const [types, setTypes] = useState([]);
-  const [placeDisabled, setPlaceDisabled] = useState(false);
+  const [disabledTime, setDisabledTime] = useState(false);
   const [displayAccents, setDisplayAccents] = useState("accents");
   const [setService, { serviceInsert }] = useMutation(addService);
   const [setServiceItems, { itemsInsert }] = useMutation(addServiceItems);
@@ -128,7 +128,7 @@ const AddEditService = (props) => {
           days["thu"] = data.thu;
           days["fri"] = data.fri;
           days["sat"] = data.sat;
-          setPlaceDisabled(data.pickup_customer);
+          setDisabledTime(values.to_match);
 
           data.ticket_type == "car"
             ? setDisplayAccents("")
@@ -166,8 +166,8 @@ const AddEditService = (props) => {
     const name = event.target.id;
     const value = event.target.checked;
 
-    if (name == "pickup_customer") {
-      setPlaceDisabled(value);
+    if (name == "to_match") {
+      setDisabledTime(value);
     }
 
     setValues({
@@ -258,7 +258,7 @@ const AddEditService = (props) => {
       accentsRef.current.focus();
     }
 
-    if (!values.time1 || !values.time2) {
+    if ((!values.time1 || !values.time2) && !values.to_match) {
       errors["time"] = "informe o horário aproximado da saída!";
       timeRef.current.focus();
     }
@@ -308,7 +308,7 @@ const AddEditService = (props) => {
           ticket_type: values.ticket_type,
           amount_accents:
             displayAccents != "" ? 0 : parseInt(values.amount_accents),
-          time: values.time1 + "|" + values.time2,
+          time: values.to_match ? "" : values.time1 + "|" + values.time2,
         };
 
         try {
@@ -361,7 +361,7 @@ const AddEditService = (props) => {
             ticket_type: values.ticket_type,
             amount_accents:
               displayAccents != "" ? 0 : parseInt(values.amount_accents),
-            time: values.time1 + "|" + values.time2,
+            time: values.to_match ? "" : values.time1 + "|" + values.time2,
           };
 
           // add imagens do serviço
@@ -933,7 +933,6 @@ const AddEditService = (props) => {
                 className="form-control"
                 placeholder="Local de Partida"
                 ref={placeRef}
-                disabled={placeDisabled ? "disabled" : ""}
               />
               {formErrors.place && (
                 <small className="form-text text-danger">
@@ -942,6 +941,19 @@ const AddEditService = (props) => {
               )}
             </div>
             <h4 className="time-Label">Horário aproximado de partida</h4>
+            <div className="form-check">
+              <input
+                type="checkbox"
+                className="form-check-input"
+                id="to_match"
+                onChange={onChangeCheck}
+                value={values.to_match}
+                checked={values.to_match}
+              />
+              <label className="form-check-label" htmlFor="to_match">
+                Horário à combinar
+              </label>
+            </div>
             <div className="form-row time-form">
               <h5 className="">Entre</h5>
               <div className="col-md-2 col-sm-3">
@@ -954,6 +966,7 @@ const AddEditService = (props) => {
                     className="form-control"
                     value={values.time1}
                     ref={timeRef}
+                    disabled={disabledTime ? "disabled" : ""}
                   />
                 </div>
               </div>
@@ -967,6 +980,7 @@ const AddEditService = (props) => {
                     onChange={onChangeTimes}
                     className="form-control"
                     value={values.time2}
+                    disabled={disabledTime ? "disabled" : ""}
                   />
                 </div>
               </div>
@@ -1103,30 +1117,25 @@ export default AddEditService;
 /* function handleValidation() {
     let fields = this.state.fields;
     let formIsValid = true;
-
     //Name
     if (!fields["name"]) {
       formIsValid = false;
       setgomt = "Cannot be empty";
     }
-
     if (typeof fields["name"] !== "undefined") {
       if (!fields["name"].match(/^[a-zA-Z]+$/)) {
         formIsValid = false;
         errors["name"] = "Only letters";
       }
     }
-
     //Email
     if (!fields["email"]) {
       formIsValid = false;
       errors["email"] = "Cannot be empty";
     }
-
     if (typeof fields["email"] !== "undefined") {
       let lastAtPos = fields["email"].lastIndexOf("@");
       let lastDotPos = fields["email"].lastIndexOf(".");
-
       if (
         !(
           lastAtPos < lastDotPos &&
@@ -1140,7 +1149,6 @@ export default AddEditService;
         errors["email"] = "Email is not valid";
       }
     }
-
     this.setState({ errors: errors });
     return formIsValid;
   } */

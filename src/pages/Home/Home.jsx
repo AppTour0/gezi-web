@@ -26,16 +26,16 @@ const PagesHome = () => {
   }
 
   return (
-    <div>
-      <button type="button" onClick={() => Services()}>
+    <div className="div">
+      <button type="button" className="btn btn-primary btn-lg distancy" onClick={() => Services()}>
         Passeios
       </button>
       {level === "master" && (
-        <button type="button" onClick={() => Enterprises()}>
+        <button type="button" className="btn btn-primary btn-lg distancy" onClick={() => Enterprises()}>
           Empresas
         </button>
       )}
-      <button type="button" onClick={() => Logout()}>
+      <button type="button" className="btn btn-danger btn-lg distancy" onClick={() => Logout()}>
         Sair
       </button>
     </div>

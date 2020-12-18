@@ -89,7 +89,8 @@ const UserLogin = () => {
   }
 
   return (
-    <div>
+    <div className="classLogin">
+      
       {error && (
         <div className="alert alert-danger" role="alert">
           <strong>{error}</strong>
@@ -106,6 +107,9 @@ const UserLogin = () => {
       )}
       {!loading && (
         <div className="user-login">
+
+        <img className="float-left logoLogin" src="LogoFooter.png" alt=""/>
+
           <h1 className="user-login__title">Acessar o Sistema</h1>
           <form onSubmit={async (event) => submit(event)}>
             <div className="user-login__form-control">

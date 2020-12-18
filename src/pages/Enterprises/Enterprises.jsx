@@ -20,59 +20,59 @@ const Enterprises = () => {
   let statusColor = "status-black";
 
   return (
-    <div>
-      {!loading &&
-        <div>
-           <a
-            name=""
-            id="btn-voltar"
-            className="btn btn-link"
-            href="javascript:void(0)"
-            role="button"
-            onClick={() => history.push("/")}
-          >
-            <FontAwesomeIcon icon="arrow-left" /> Voltar
-          </a>
-          <br></br>
-          <br></br>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Id</th>
-                <th>Nome</th>
-                <th>Status</th>
-                <th>Passeios</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.empresas.map(
-                (enterprise) => (
-                  enterprise.ativo ? statusColor = "status-black" : statusColor = "status-red",
-                  (
-                    <tr key={enterprise.id}>
-                      <td className={statusColor} scope="row">{enterprise.id}</td>
-                      <td className={statusColor}>{enterprise.nome}</td>
-                      <td className={statusColor} >{enterprise.ativo ? "Ativo" : "Inativo"}</td>
-                      <td>
-                        <a
-                          name=""
-                          id=""
-                          className={`center-btn`}
-                          href="javascript:void(0)"
-                          onClick={() => Services(enterprise.id)}
-                        >
-                          <FontAwesomeIcon icon="bus"/>
-                        </a>
-                      </td>
-                    </tr>
+      <div className="front-resolv">
+        <a
+          name=""
+          id="btn-voltar"
+          className="btn btn-secondary"
+          href="javascript:void(0)"
+          role="button"
+          onClick={() => history.push("/")}
+        >
+          <FontAwesomeIcon icon="arrow-left" /> Voltar
+        </a>
+        <br></br>
+        <br></br>
+        {!loading &&      
+          <div>                     
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Id</th>
+                  <th>Nome</th>
+                  <th>Status</th>
+                  <th>Passeios</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.empresas.map(
+                  (enterprise) => (
+                    enterprise.ativo ? statusColor = "status-black" : statusColor = "status-red",
+                    (
+                      <tr key={enterprise.id}>
+                        <td className={statusColor} scope="row">{enterprise.id}</td>
+                        <td className={statusColor}>{enterprise.nome}</td>
+                        <td className={statusColor} >{enterprise.ativo ? "Ativo" : "Inativo"}</td>
+                        <td>
+                          <a
+                            name=""
+                            id=""
+                            className={`center-btn`}
+                            href="javascript:void(0)"
+                            onClick={() => Services(enterprise.id)}
+                          >
+                            <FontAwesomeIcon icon="bus"/>
+                          </a>
+                        </td>
+                      </tr>
+                    )
                   )
-                )
-              )}
-            </tbody>
-          </table>
-        </div>
-      }
-    </div>
+                )}
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
   );
 };
 

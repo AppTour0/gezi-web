@@ -134,7 +134,7 @@ const Services = (props) => {
   let deleteActive = "btn btn-primary";
 
   return (
-    <div>
+    <div className="container">
       {error && (
         <div className="alert alert-danger" role="alert">
           <strong>{error}</strong>
@@ -152,21 +152,22 @@ const Services = (props) => {
       )}
       {!loading && (
         <div>
+          <br></br>
           <a
             name=""
             id="btn-voltar"
-            className="btn btn-link"
+            className="btn btn-secondary"
             href="javascript:void(0)"
             role="button"
             onClick={() => back()}
           >
             <FontAwesomeIcon icon="arrow-left" /> Voltar
-          </a>
+          </a>          
           <br></br>
           <a
             name=""
             id=""
-            className="btn btn-primary"
+            className="btn btn-primary btn-lg"
             role="button"
             onClick={() => addOrEditService("insert", 0)}
           >

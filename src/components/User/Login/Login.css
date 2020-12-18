@@ -1,5 +1,5 @@
 .user-login {
-  width: 400px;
+  max-width: 400px;
   margin: 0 auto;
 }
 
@@ -18,7 +18,7 @@
 
 .user-login__form-control label {
   margin-bottom: 5px;
-  color: #979797;
+  color: #ffffff;
   font-size: 16px;
 }
 
@@ -41,4 +41,20 @@
 
 .user-login__error {
   color: red;
+}
+
+.classLogin{
+  background-color: #0F4C81;
+  padding-top: 150px;
+}
+
+.logoLogin{
+  max-width:300px;
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding-bottom: 50px;
+  padding-left: 50px;
 }
