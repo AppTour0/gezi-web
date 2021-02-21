@@ -1,7 +1,6 @@
-import React, { useContext, useState } from "react";
+import React from "react";
 import { getEnterprises } from "./Queries";
 import { useQuery } from "@apollo/client";
-import EntContext from "../../components/Store/Data/EntContext";
 import { useHistory } from "react-router-dom";
 import "./Enterprises.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -21,18 +20,25 @@ const Enterprises = () => {
 
   return (
       <div className="front-resolv">
-        <a
-          name=""
+        <button
           id="btn-voltar"
-          className="btn btn-secondary"
-          href="javascript:void(0)"
           role="button"
-          onClick={() => history.push("/")}
+          className="btn btn-secondary"
+          onClick={() => history.goBack}
         >
           <FontAwesomeIcon icon="arrow-left" /> Voltar
-        </a>
+        </button>
         <br></br>
         <br></br>
+        {loading &&
+          <ReactLoading
+            type={"spin"}
+            color={"#0F4C81"}
+            height={"10%"}
+            width={"10%"}
+            className="loading"
+          />
+        }
         {!loading &&      
           <div>                     
             <table className="table">
@@ -54,15 +60,14 @@ const Enterprises = () => {
                         <td className={statusColor}>{enterprise.nome}</td>
                         <td className={statusColor} >{enterprise.ativo ? "Ativo" : "Inativo"}</td>
                         <td>
-                          <a
+                          <button
                             name=""
                             id=""
-                            className={`center-btn`}
-                            href="javascript:void(0)"
+                            className={`btn btn-link center-btn`}
                             onClick={() => Services(enterprise.id)}
                           >
                             <FontAwesomeIcon icon="bus"/>
-                          </a>
+                          </button>
                         </td>
                       </tr>
                     )

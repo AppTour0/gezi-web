@@ -47,7 +47,6 @@ const AddEditService = (props) => {
   );
   const [imagesArray, setImagesArray] = useState([]);
   const [imagesDisplay, setImagesDisplay] = useState([]);
-  const [galeryArray, setGaleryArray] = useState([]);
   const [galeryDisplay, setGaleryDisplay] = useState([]);
   const [haveImages, setHaveImages] = useState(false);
   // testa se houve alteração do dia do passeio
@@ -66,10 +65,11 @@ const AddEditService = (props) => {
   const placeRef = useRef();
   const accentsRef = useRef();
   const timeRef = useRef();
+  const timeReturnRef = useRef();
 
   const { idUser } = useContext(UserContext);
   let { idEnt } = useContext(EntContext);
-  if (level == "master" && idEntForProps) {
+  if (level === "master" && idEntForProps) {
     idEnt = idEntForProps;
   }
   let now = new Date();
@@ -117,7 +117,7 @@ const AddEditService = (props) => {
         .then((valores) => {
           let data = valores.data.services[0];
           let haveImagesTest = data.services_images.length > 0;
-
+          
           setValues(serviceModel(data));
           setLoading(valores.loading);
           setHaveImages(haveImagesTest);
@@ -130,7 +130,7 @@ const AddEditService = (props) => {
           days["sat"] = data.sat;
           setDisabledTime(values.to_match);
 
-          data.ticket_type == "car"
+          data.ticket_type === "car"
             ? setDisplayAccents("")
             : setDisplayAccents("accents");
 
@@ -153,13 +153,13 @@ const AddEditService = (props) => {
     });
   }
 
-  function onChangeTimes(event) {
+  /* function onChangeTimes(event) {
     const { value, name } = event.target;
     setValues({
       ...values,
       [name]: value,
     });
-  }
+  } */
 
   function onChangeCheck(event) {
     /* NÃO SEI PORQUE!!! MAS SE NÃO FOR ASSIM NÃO FUNCIONA!!! */
@@ -263,6 +263,11 @@ const AddEditService = (props) => {
       timeRef.current.focus();
     }
 
+    if ((!values.timeReturn)) {
+      errors["timeReturn"] = "informe o horário aproximado de retorno!";
+      timeRef.current.focus();
+    }
+
     if (values.value && isNaN(values.value)) {
       let value = values.value.replace(/\D/g, "");
       let valueLen = value.length;
@@ -309,12 +314,14 @@ const AddEditService = (props) => {
           amount_accents:
             displayAccents != "" ? 0 : parseInt(values.amount_accents),
           time: values.to_match ? "" : values.time1 + "|" + values.time2,
+          time_return: values.timeReturn,
         };
 
         try {
           await setService({
             variables: { objects: objects },
             refetchQueries: [{ query: getServices, variables: { idEnt } }],
+            awaitRefetchQueries: true,
           }).then(async (data) => {
             let idNewService = data.data.insert_services.returning[0].id;
             let items = createObjectItems(180, idNewService);
@@ -362,6 +369,7 @@ const AddEditService = (props) => {
             amount_accents:
               displayAccents != "" ? 0 : parseInt(values.amount_accents),
             time: values.to_match ? "" : values.time1 + "|" + values.time2,
+            time_return: values.timeReturn,
           };
 
           // add imagens do serviço
@@ -588,9 +596,10 @@ const AddEditService = (props) => {
   }
 
   function back() {
-    level == "master" && idEntForProps
+    history.goBack();
+    /* level == "master" && idEntForProps
       ? history.push("/services/" + idEntForProps)
-      : history.push("/services/0");
+      : history.push("/services/0"); */
   }
 
   function teste() {
@@ -600,7 +609,7 @@ const AddEditService = (props) => {
 
   let insert = typePost === "insert";
   let imgDefault = "/img_default.png";
-
+  
   return (
     <div>
       {error && (
@@ -624,7 +633,7 @@ const AddEditService = (props) => {
             name=""
             id="btn-voltar"
             className="btn btn-link"
-            href="javascript:void(0)"
+            href="#"
             role="button"
             onClick={() => back()}
           >
@@ -656,17 +665,16 @@ const AddEditService = (props) => {
                 onChange={onChangeImage}
               />
               {haveImages && (
-                <a
+                <button
                   name=""
                   id=""
                   className="btn btn-primary"
-                  href="javascript:void(0)"
                   role="button"
                   data-toggle="modal"
                   data-target="#galeryModal"
                 >
                   <FontAwesomeIcon icon="images" /> Galeria
-                </a>
+                </button>
               )}
             </div>
 
@@ -962,7 +970,7 @@ const AddEditService = (props) => {
                     id="time1"
                     type="time"
                     name="time1"
-                    onChange={onChangeTimes}
+                    onChange={onChange}
                     className="form-control"
                     value={values.time1}
                     ref={timeRef}
@@ -977,7 +985,7 @@ const AddEditService = (props) => {
                     id="time2"
                     type="time"
                     name="time2"
-                    onChange={onChangeTimes}
+                    onChange={onChange}
                     className="form-control"
                     value={values.time2}
                     disabled={disabledTime ? "disabled" : ""}
@@ -987,6 +995,30 @@ const AddEditService = (props) => {
               {formErrors.time && (
                 <small className="form-text text-danger">
                   {formErrors.time}
+                </small>
+              )}
+            </div>
+            <br />
+            <hr></hr>
+            <h4 className="time-Label">Horário de retorno</h4>
+            <div className="form-row time-form">
+              <h5 className="">Por volta das </h5>
+              <div className="col-md-2 col-sm-3">
+                <div className="form-group">
+                  <input
+                    id="timeReturn"
+                    type="time"
+                    name="timeReturn"
+                    onChange={onChange}
+                    className="form-control"
+                    value={values.timeReturn}//format(values.timeReturn, 'HH-mm')
+                    ref={timeReturnRef}
+                  />
+                </div>
+              </div>
+              {formErrors.timeReturn && (
+                <small className="form-text text-danger">
+                  {formErrors.timeReturn}
                 </small>
               )}
             </div>
@@ -1105,6 +1137,7 @@ const AddEditService = (props) => {
             <button type="submit" className="btn btn-primary">
               Salvar
             </button>
+            <br/>
           </form>
         </div>
       )}

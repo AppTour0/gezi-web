@@ -110,6 +110,7 @@ export const getService = gql`
       typeTour{
         description
       }
+      time_return
     }
   }
 `;

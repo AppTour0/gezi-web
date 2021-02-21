@@ -157,7 +157,7 @@ const Services = (props) => {
             name=""
             id="btn-voltar"
             className="btn btn-secondary"
-            href="javascript:void(0)"
+            href="#"
             role="button"
             onClick={() => back()}
           >
@@ -198,28 +198,26 @@ const Services = (props) => {
                       <td>{service.name}</td>
                       <td>{service.active ? "Ativo" : "Inativo"}</td>
                       <td>
-                        <a
+                        <button
                           name=""
                           id=""
-                          className="center-btn"
-                          href="javascript:void(0)"
+                          className="btn btn-link center-btn"
                           onClick={() => addOrEditService("update", service.id)}
                         >
                           <FontAwesomeIcon icon="edit" />
-                        </a>
+                        </button>
                       </td>
                       <td>
-                        <a
+                        <button
                           name=""
                           id=""
-                          className={`center-btn ${deleteActive}`}
-                          href="javascript:void(0)"
+                          className={`btn btn-link center-btn ${deleteActive}`}
                           onClick={async () => {
                             handleDelete(service.id);
                           }}
                         >
                           <FontAwesomeIcon icon="trash" />
-                        </a>
+                        </button>
                       </td>
                     </tr>
                   )

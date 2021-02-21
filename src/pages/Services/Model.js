@@ -27,6 +27,7 @@ export const serviceModel = (object = []) => {
     time: "",
     time1: "",
     time2: "",
+    timeReturn: "",
     to_match: false,
     feedbacks: {},
     orders: {},
@@ -40,6 +41,8 @@ export const serviceModel = (object = []) => {
   }
 
   let times = object.time != null ? object.time.split('|') : "";
+
+  //console.log(object);
 
   Object.entries(object).map((item) => {
     data.active = item[0] == "active" ? item[1] : data.active;
@@ -75,41 +78,14 @@ export const serviceModel = (object = []) => {
     data.time1 = times[0];
     data.time2 = times[1];
     data.to_match = times[0] == "" ? true : false;
+
+    if(item[0] == "time_return" && item[1] != null){
+      data.timeReturn  = item[1].substring(0,5)
+    }else{
+      data.timeReturn = data.time_return
+    }
+    
   })
   return data;
 }
-
-
-
-/* export const serviceModel = {
-  active: true,
-  dateCreation: { currentTime: new Date().toLocaleString() },
-  description: "",
-  id: null,
-  idEnterprise: 0,
-  name: "",
-  responsible: "",
-  type_tour: "",
-  userCreation: "",
-  value: 0.00,
-  initDate: "",
-  finalDate: "",
-  pickup_customer: false,
-  place: "",
-  mon: true,
-  tue: true,
-  wed: true,
-  thu: true,
-  fri: true,
-  sat: true,
-  sun: true,
-  city: "",
-  time: "",
-  ticket_type: "",
-  amount_accents: 0,
-  feedbacks: {},
-  orders: {},
-  empresa: {},
-  images: {},
-  typeRelation: {},
-}; */
+//item[1].substring(0,5)

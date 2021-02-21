@@ -3,6 +3,6 @@ html, body, #root, #root > div {
 
   }
 .container{
-    min-height: 80%;
+    min-height: 88%;
     position:relative;
 }

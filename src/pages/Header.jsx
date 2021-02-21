@@ -1,12 +1,14 @@
 import React from "react";
 import "./Header.css";
+import "./Footer.css";
+import logo from '../assets/LogoFooter.svg';
 
 const Header = () => {
   return (
     <nav className="navbar navbar-expand-sm navbar-light bg-light">
       <header className="header">
-        <a className="navbar-brand" href="javascript:void(0)">
-          <img className="float-left logoFooter" src="LogoFooter.png" alt=""/>
+        <a className="navbar-brand" href="#">
+          <img className="float-left logo" src={logo} alt=""/>
         </a>
       </header>
       {/* <button
