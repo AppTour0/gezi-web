@@ -6,10 +6,8 @@ import {
   getServices,
   getService,
   getTypeTours,
-  addServiceItems,
   addServiceImages,
   updateService,
-  deleteServiceItems,
   deleteServiceImages,
 } from "./Queries";
 import { useApolloClient, useMutation } from "@apollo/client";
@@ -39,12 +37,8 @@ const AddEditService = (props) => {
   const [disabledTime, setDisabledTime] = useState(false);
   const [displayAccents, setDisplayAccents] = useState("accents");
   const [setService, { serviceInsert }] = useMutation(addService);
-  const [setServiceItems, { itemsInsert }] = useMutation(addServiceItems);
   const [setServiceImages, { imagesInsert }] = useMutation(addServiceImages);
   const [setUpdateService, { serviceUpdate }] = useMutation(updateService);
-  const [setDeleteServiceItems, { serviceDelete }] = useMutation(
-    deleteServiceItems
-  );
   const [imagesArray, setImagesArray] = useState([]);
   const [imagesDisplay, setImagesDisplay] = useState([]);
   const [galeryDisplay, setGaleryDisplay] = useState([]);
@@ -117,7 +111,7 @@ const AddEditService = (props) => {
         .then((valores) => {
           let data = valores.data.services[0];
           let haveImagesTest = data.services_images.length > 0;
-          
+
           setValues(serviceModel(data));
           setLoading(valores.loading);
           setHaveImages(haveImagesTest);
@@ -324,11 +318,11 @@ const AddEditService = (props) => {
             awaitRefetchQueries: true,
           }).then(async (data) => {
             let idNewService = data.data.insert_services.returning[0].id;
-            let items = createObjectItems(180, idNewService);
-            await setServiceItems({
-              variables: { objects: items },
-              refetchQueries: [{ query: getServices, variables: { idEnt } }],
-            });
+            // let items = createObjectItems(180, idNewService);
+            // await setServiceItems({
+            //   variables: { objects: items },
+            //   refetchQueries: [{ query: getServices, variables: { idEnt } }],
+            // });
             let images = await saveImage(idNewService);
             if (images.length == 0) {
               setLoading(false);
@@ -380,15 +374,15 @@ const AddEditService = (props) => {
             });
           }
 
-          await changeWeekDay().then(async (value) => {
-            await setUpdateService({
-              variables: { id: idService, changes: changesService },
-              refetchQueries: [{ query: getServices, variables: { idEnt } }],
-            }).then((value) => {
-              setLoading(false);
-              return back();
-            });
+          //await changeWeekDay().then(async (value) => {
+          await setUpdateService({
+            variables: { id: idService, changes: changesService },
+            refetchQueries: [{ query: getServices, variables: { idEnt } }],
+          }).then((value) => {
+            setLoading(false);
+            return back();
           });
+          //});
         } catch (error) {
           setError(error.message);
           setLoading(false);
@@ -397,162 +391,162 @@ const AddEditService = (props) => {
     }
   }
 
-  async function changeWeekDay() {
-    let typePost = "";
-    // domingo
-    if (days["sun"] != values.sun) {
-      // insere ou deleta
-      typePost = values.sun ? "insert" : "delete";
-      await createOrDeleteDays(0, typePost);
-    }
-    // segunda
-    if (days["mon"] != values.mon) {
-      typePost = values.mon ? "insert" : "delete";
-      await createOrDeleteDays(1, typePost);
-    }
-    // terça
-    if (days["tue"] != values.tue) {
-      typePost = values.tue ? "insert" : "delete";
-      await createOrDeleteDays(2, typePost);
-    }
-    // quarta
-    if (days["wed"] != values.wed) {
-      typePost = values.wed ? "insert" : "delete";
-      await createOrDeleteDays(3, typePost);
-    }
-    // quinta
-    if (days["thu"] != values.thu) {
-      typePost = values.thu ? "insert" : "delete";
-      await createOrDeleteDays(4, typePost);
-    }
-    // sexta
-    if (days["fri"] != values.fri) {
-      typePost = values.fri ? "insert" : "delete";
-      await createOrDeleteDays(5, typePost);
-    }
-    // sabado
-    if (days["sat"] != values.sat) {
-      typePost = values.sat ? "insert" : "delete";
-      await createOrDeleteDays(6, typePost);
-    }
-  }
+  // async function changeWeekDay() {
+  //   let typePost = "";
+  //   // domingo
+  //   if (days["sun"] != values.sun) {
+  //     // insere ou deleta
+  //     typePost = values.sun ? "insert" : "delete";
+  //     await createOrDeleteDays(0, typePost);
+  //   }
+  //   // segunda
+  //   if (days["mon"] != values.mon) {
+  //     typePost = values.mon ? "insert" : "delete";
+  //     await createOrDeleteDays(1, typePost);
+  //   }
+  //   // terça
+  //   if (days["tue"] != values.tue) {
+  //     typePost = values.tue ? "insert" : "delete";
+  //     await createOrDeleteDays(2, typePost);
+  //   }
+  //   // quarta
+  //   if (days["wed"] != values.wed) {
+  //     typePost = values.wed ? "insert" : "delete";
+  //     await createOrDeleteDays(3, typePost);
+  //   }
+  //   // quinta
+  //   if (days["thu"] != values.thu) {
+  //     typePost = values.thu ? "insert" : "delete";
+  //     await createOrDeleteDays(4, typePost);
+  //   }
+  //   // sexta
+  //   if (days["fri"] != values.fri) {
+  //     typePost = values.fri ? "insert" : "delete";
+  //     await createOrDeleteDays(5, typePost);
+  //   }
+  //   // sabado
+  //   if (days["sat"] != values.sat) {
+  //     typePost = values.sat ? "insert" : "delete";
+  //     await createOrDeleteDays(6, typePost);
+  //   }
+  // }
 
   /* se for insert cria os dias se for update altera somente */
-  async function createOrDeleteDays(weekDay, typePost) {
-    let today =
-      now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
-    const diffTime = Math.abs(
-      Date.parse(today) - Date.parse(values.final_date)
-    );
-    let index = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    let dates = [];
+  // async function createOrDeleteDays(weekDay, typePost) {
+  //   let today =
+  //     now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+  //   const diffTime = Math.abs(
+  //     Date.parse(today) - Date.parse(values.final_date)
+  //   );
+  //   let index = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  //   let dates = [];
 
-    try {
-      let todayWeekday = Date.parse(today);
-      let todayWeekdayDate = new Date(todayWeekday);
+  //   try {
+  //     let todayWeekday = Date.parse(today);
+  //     let todayWeekdayDate = new Date(todayWeekday);
 
-      for (var i = 0; i < index; i++) {
-        if (todayWeekdayDate.getDay() == weekDay) {
-          dates.push(today);
-        }
-        todayWeekdayDate.setDate(todayWeekdayDate.getDate() + 1);
-        today =
-          todayWeekdayDate.getFullYear() +
-          "-" +
-          (todayWeekdayDate.getMonth() + 1) +
-          "-" +
-          todayWeekdayDate.getDate();
-      }
+  //     for (var i = 0; i < index; i++) {
+  //       if (todayWeekdayDate.getDay() == weekDay) {
+  //         dates.push(today);
+  //       }
+  //       todayWeekdayDate.setDate(todayWeekdayDate.getDate() + 1);
+  //       today =
+  //         todayWeekdayDate.getFullYear() +
+  //         "-" +
+  //         (todayWeekdayDate.getMonth() + 1) +
+  //         "-" +
+  //         todayWeekdayDate.getDate();
+  //     }
 
-      if (typePost == "delete") {
-        await setDeleteServiceItems({
-          variables: { dates: dates, idService: idService },
-          refetchQueries: [{ query: getServices, variables: { idEnt } }],
-        });
-      } else {
-        let objectItems = [];
-        for (let index = 0; index < dates.length; index++) {
-          objectItems.push({
-            service_id: idService,
-            date: dates[index],
-            type: values.type_tour,
-            sold_amount: 0,
-          });
-        }
-        await setServiceItems({
-          variables: { objects: objectItems },
-          refetchQueries: [{ query: getServices, variables: { idEnt } }],
-        });
-      }
-    } catch (error) {
-      setError(error.message);
-      setLoading(false);
-    }
-  }
+  //     if (typePost == "delete") {
+  //       await setDeleteServiceItems({
+  //         variables: { dates: dates, idService: idService },
+  //         refetchQueries: [{ query: getServices, variables: { idEnt } }],
+  //       });
+  //     } else {
+  //       let objectItems = [];
+  //       for (let index = 0; index < dates.length; index++) {
+  //         objectItems.push({
+  //           service_id: idService,
+  //           date: dates[index],
+  //           type: values.type_tour,
+  //           sold_amount: 0,
+  //         });
+  //       }
+  //       await setServiceItems({
+  //         variables: { objects: objectItems },
+  //         refetchQueries: [{ query: getServices, variables: { idEnt } }],
+  //       });
+  //     }
+  //   } catch (error) {
+  //     setError(error.message);
+  //     setLoading(false);
+  //   }
+  // }
 
   /* cria as datas de acordo com os dias da semana*/
-  function createObjectItems(length, idService) {
-    let initDateAdded = new Date();
-    let weekDay = initDateAdded.getDay;
-    let initDateMore =
-      initDateAdded.getFullYear() +
-      "-" +
-      (initDateAdded.getMonth() + 1) +
-      "-" +
-      initDateAdded.getDate();
-    let objectItems = [];
+  // function createObjectItems(length, idService) {
+  //   let initDateAdded = new Date();
+  //   let weekDay = initDateAdded.getDay;
+  //   let initDateMore =
+  //     initDateAdded.getFullYear() +
+  //     "-" +
+  //     (initDateAdded.getMonth() + 1) +
+  //     "-" +
+  //     initDateAdded.getDate();
+  //   let objectItems = [];
 
-    for (let index = 0; index < length; index++) {
-      if (index > 0) {
-        initDateAdded.setDate(initDateAdded.getDate() + 1);
-        initDateMore =
-          initDateAdded.getFullYear() +
-          "-" +
-          (initDateAdded.getMonth() + 1) +
-          "-" +
-          initDateAdded.getDate();
-      }
+  //   for (let index = 0; index < length; index++) {
+  //     if (index > 0) {
+  //       initDateAdded.setDate(initDateAdded.getDate() + 1);
+  //       initDateMore =
+  //         initDateAdded.getFullYear() +
+  //         "-" +
+  //         (initDateAdded.getMonth() + 1) +
+  //         "-" +
+  //         initDateAdded.getDate();
+  //     }
 
-      weekDay = initDateAdded.getDay();
+  //     weekDay = initDateAdded.getDay();
 
-      let date = {
-        service_id: idService,
-        date: initDateMore,
-        type: values.type_tour,
-        sold_amount: 0,
-      };
+  //     let date = {
+  //       service_id: idService,
+  //       date: initDateMore,
+  //       type: values.type_tour,
+  //       sold_amount: 0,
+  //     };
 
-      // domingo
-      if (values.sun && weekDay == 0) {
-        objectItems.push(date);
-      }
-      // segunda
-      if (values.mon && weekDay == 1) {
-        objectItems.push(date);
-      }
-      // terça
-      if (values.tue && weekDay == 2) {
-        objectItems.push(date);
-      }
-      // quarta
-      if (values.wed && weekDay == 3) {
-        objectItems.push(date);
-      }
-      // quinta
-      if (values.thu && weekDay == 4) {
-        objectItems.push(date);
-      }
-      // sexta
-      if (values.fri && weekDay == 5) {
-        objectItems.push(date);
-      }
-      // sabado
-      if (values.sat && weekDay == 6) {
-        objectItems.push(date);
-      }
-    }
-    return objectItems;
-  }
+  //     // domingo
+  //     if (values.sun && weekDay == 0) {
+  //       objectItems.push(date);
+  //     }
+  //     // segunda
+  //     if (values.mon && weekDay == 1) {
+  //       objectItems.push(date);
+  //     }
+  //     // terça
+  //     if (values.tue && weekDay == 2) {
+  //       objectItems.push(date);
+  //     }
+  //     // quarta
+  //     if (values.wed && weekDay == 3) {
+  //       objectItems.push(date);
+  //     }
+  //     // quinta
+  //     if (values.thu && weekDay == 4) {
+  //       objectItems.push(date);
+  //     }
+  //     // sexta
+  //     if (values.fri && weekDay == 5) {
+  //       objectItems.push(date);
+  //     }
+  //     // sabado
+  //     if (values.sat && weekDay == 6) {
+  //       objectItems.push(date);
+  //     }
+  //   }
+  //   return objectItems;
+  // }
 
   function removeImageInsert(image) {
     imagesArray.splice(imagesArray.indexOf(image), 1);
@@ -609,7 +603,7 @@ const AddEditService = (props) => {
 
   let insert = typePost === "insert";
   let imgDefault = "/img_default.png";
-  
+
   return (
     <div>
       {error && (
@@ -666,10 +660,8 @@ const AddEditService = (props) => {
               />
               {haveImages && (
                 <button
-                  name=""
-                  id=""
+                  type="button"
                   className="btn btn-primary"
-                  role="button"
                   data-toggle="modal"
                   data-target="#galeryModal"
                 >
@@ -735,24 +727,27 @@ const AddEditService = (props) => {
                     {haveImages && (
                       <div className="container">
                         <div className="row">
-                          {values.services_images.map((image) => (
-                            <div key={image.id} className="wrapper-galery">
-                              <a
-                                className="close close-button"
-                                onClick={() => removeImageEdit(image)}
-                              >
-                                <span>&times;</span>
-                              </a>
-                              <img
-                                src={image.image_url}
-                                alt="..."
-                                className="image img-thumbnail"
-                              />
-                            </div>
-                          ))}
+                          {
+                            values.services_images.map((image) => (
+                              <div key={image.id} className="wrapper-galery">
+                                <a
+                                  className="close close-button"
+                                  onClick={() => removeImageEdit(image)}
+                                >
+                                  <span>&times;</span>
+                                </a>
+                                <img
+                                  src={image.image_url}
+                                  alt="..."
+                                  className="image img-thumbnail"
+                                />
+                              </div>
+                            ))
+                          }
                         </div>
                       </div>
                     )}
+
                   </div>
                 </div>
               </div>
@@ -1137,7 +1132,7 @@ const AddEditService = (props) => {
             <button type="submit" className="btn btn-primary">
               Salvar
             </button>
-            <br/>
+            <br />
           </form>
         </div>
       )}

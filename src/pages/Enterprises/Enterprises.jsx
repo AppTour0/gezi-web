@@ -22,9 +22,8 @@ const Enterprises = () => {
       <div className="front-resolv">
         <button
           id="btn-voltar"
-          role="button"
           className="btn btn-secondary"
-          onClick={() => history.goBack}
+          onClick={() => history.goBack()}
         >
           <FontAwesomeIcon icon="arrow-left" /> Voltar
         </button>

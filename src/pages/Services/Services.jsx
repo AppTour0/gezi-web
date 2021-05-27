@@ -127,7 +127,7 @@ const Services = (props) => {
   }
 
   function back() {
-    idEntForProps == 0 ? history.push("/") : history.push("/enterprises");
+    history.goBack();
   }
 
   let orderLen = 0;
